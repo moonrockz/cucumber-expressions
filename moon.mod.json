@@ -1,0 +1,13 @@
+{
+  "name": "moonrockz/cucumber-expressions",
+  "version": "0.1.0",
+  "deps": {
+    "moonbitlang/x": "0.4.40"
+  },
+  "readme": "README.mbt.md",
+  "repository": "https://github.com/moonrockz/cucumber-expressions",
+  "license": "Apache-2.0",
+  "keywords": ["cucumber", "expressions", "bdd", "testing", "gherkin"],
+  "description": "Cucumber Expressions parser and matcher for MoonBit",
+  "source": "src"
+}
