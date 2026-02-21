@@ -135,37 +135,77 @@ fn split_alternations(nodes : Array[Node]) -> Array[Node] {
     // Check if this position starts an alternation group.
     // An alternation group is a sequence: node+ (AltMarker node+)+
     // bounded by start/end of expression or whitespace TextNodes.
-    if has_alternation_ahead(nodes, i) {
-      // Collect the alternation group
-      let alternatives : Array[Array[Node]] = []
-      let mut current_arm : Array[Node] = []
-      while i < len {
-        match nodes[i] {
-          AlternationNode([]) => {
-            // alternation marker
-            alternatives.push(current_arm)
-            current_arm = []
-            i = i + 1
-          }
-          TextNode(s) =>
-            if is_whitespace_text(s) {
-              // Whitespace ends the alternation group
-              break
-            } else {
+    match nodes[i] {
+      AlternationNode([]) => {
+        // Sentinel at current position — this IS an alternation marker.
+        // Start an alternation group with an empty first arm.
+        let alternatives : Array[Array[Node]] = []
+        let mut current_arm : Array[Node] = []
+        alternatives.push(current_arm) // empty left arm
+        current_arm = []
+        i = i + 1
+        while i < len {
+          match nodes[i] {
+            AlternationNode([]) => {
+              alternatives.push(current_arm)
+              current_arm = []
+              i = i + 1
+            }
+            TextNode(s) =>
+              if is_whitespace_text(s) {
+                break
+              } else {
+                current_arm.push(nodes[i])
+                i = i + 1
+              }
+            ParameterNode(_) => break
+            _ => {
               current_arm.push(nodes[i])
               i = i + 1
             }
-          _ => {
-            current_arm.push(nodes[i])
-            i = i + 1
           }
         }
+        alternatives.push(current_arm)
+        result.push(AlternationNode(alternatives))
       }
-      alternatives.push(current_arm)
-      result.push(AlternationNode(alternatives))
-    } else {
-      result.push(nodes[i])
-      i = i + 1
+      _ =>
+        if has_alternation_ahead(nodes, i) {
+          // Collect the alternation group
+          let alternatives : Array[Array[Node]] = []
+          let mut current_arm : Array[Node] = []
+          while i < len {
+            match nodes[i] {
+              AlternationNode([]) => {
+                // alternation marker
+                alternatives.push(current_arm)
+                current_arm = []
+                i = i + 1
+              }
+              TextNode(s) =>
+                if is_whitespace_text(s) {
+                  // Whitespace ends the alternation group
+                  break
+                } else {
+                  current_arm.push(nodes[i])
+                  i = i + 1
+                }
+              ParameterNode(_) => {
+                // Parameter node acts as alternation boundary per spec
+                // (bounded by `{` / `}`)
+                break
+              }
+              _ => {
+                current_arm.push(nodes[i])
+                i = i + 1
+              }
+            }
+          }
+          alternatives.push(current_arm)
+          result.push(AlternationNode(alternatives))
+        } else {
+          result.push(nodes[i])
+          i = i + 1
+        }
     }
   }
   result
@@ -176,10 +216,11 @@ fn split_alternations(nodes : Array[Node]) -> Array[Node] {
 /// next whitespace boundary (or end of array). Only returns true if the node
 /// at `start` is NOT whitespace and there IS an alternation marker in the group.
 fn has_alternation_ahead(nodes : Array[Node], start : Int) -> Bool {
-  // Don't start an alternation group on whitespace
+  // Don't start an alternation group on whitespace, sentinel, or parameter
   match nodes[start] {
     TextNode(s) => if is_whitespace_text(s) { return false }
     AlternationNode([]) => return false
+    ParameterNode(_) => return false
     _ => ()
   }
   let len = nodes.length()
@@ -188,6 +229,7 @@ fn has_alternation_ahead(nodes : Array[Node], start : Int) -> Bool {
     match nodes[i] {
       AlternationNode([]) => return true
       TextNode(s) => if is_whitespace_text(s) { return false }
+      ParameterNode(_) => return false
       _ => ()
     }
     i = i + 1

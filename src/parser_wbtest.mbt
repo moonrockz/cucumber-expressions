@@ -84,19 +84,63 @@ test "parse: alternation with optional" {
 // Errors
 
 test "parse: unmatched brace" {
-  let result : Result[Node, Error] = try {
-    Ok(parse_expression!("{int"))
+  let mut caught = false
+  try {
+    parse_expression!("{int") |> ignore
   } catch {
-    e => Err(e)
+    ExpressionError::UnmatchedBrace(..) => caught = true
+    _ => ()
   }
-  inspect(result is Err(_), content="true")
+  inspect(caught, content="true")
 }
 
 test "parse: unmatched paren" {
-  let result : Result[Node, Error] = try {
-    Ok(parse_expression!("(blind"))
+  let mut caught = false
+  try {
+    parse_expression!("(blind") |> ignore
   } catch {
-    e => Err(e)
+    ExpressionError::UnmatchedParen(..) => caught = true
+    _ => ()
   }
-  inspect(result is Err(_), content="true")
+  inspect(caught, content="true")
+}
+
+// Multi-way alternation
+
+test "parse: multi-way alternation" {
+  let ast = parse_expression!("a/b/c")
+  inspect(
+    ast,
+    content="ExpressionNode([AlternationNode([[TextNode(\"a\")], [TextNode(\"b\")], [TextNode(\"c\")]])])",
+  )
+}
+
+// Trailing slash
+
+test "parse: trailing slash" {
+  let ast = parse_expression!("cats/")
+  inspect(
+    ast,
+    content="ExpressionNode([AlternationNode([[TextNode(\"cats\")], []])])",
+  )
+}
+
+// Leading slash — sentinel must not leak
+
+test "parse: leading slash" {
+  let ast = parse_expression!("/cats")
+  inspect(
+    ast,
+    content="ExpressionNode([AlternationNode([[], [TextNode(\"cats\")]])])",
+  )
+}
+
+// Parameter as alternation boundary
+
+test "parse: parameter as left boundary for alternation" {
+  let ast = parse_expression!("{int}st/nd/rd/th")
+  inspect(
+    ast,
+    content="ExpressionNode([ParameterNode(\"int\"), AlternationNode([[TextNode(\"st\")], [TextNode(\"nd\")], [TextNode(\"rd\")], [TextNode(\"th\")]])])",
+  )
 }
