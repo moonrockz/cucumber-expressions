@@ -115,24 +115,30 @@ test "parse: multi-way alternation" {
   )
 }
 
-// Trailing slash
+// Trailing slash — now rejected by validator (empty arm has no text)
 
-test "parse: trailing slash" {
-  let ast = parse_expression!("cats/")
-  inspect(
-    ast,
-    content="ExpressionNode([AlternationNode([[TextNode(\"cats\")], []])])",
-  )
+test "parse: trailing slash rejected" {
+  let mut caught = false
+  try {
+    parse_expression!("cats/") |> ignore
+  } catch {
+    ExpressionError::ValidationError(..) => caught = true
+    _ => ()
+  }
+  inspect(caught, content="true")
 }
 
-// Leading slash — sentinel must not leak
+// Leading slash — now rejected by validator (empty arm has no text)
 
-test "parse: leading slash" {
-  let ast = parse_expression!("/cats")
-  inspect(
-    ast,
-    content="ExpressionNode([AlternationNode([[], [TextNode(\"cats\")]])])",
-  )
+test "parse: leading slash rejected" {
+  let mut caught = false
+  try {
+    parse_expression!("/cats") |> ignore
+  } catch {
+    ExpressionError::ValidationError(..) => caught = true
+    _ => ()
+  }
+  inspect(caught, content="true")
 }
 
 // Parameter as alternation boundary

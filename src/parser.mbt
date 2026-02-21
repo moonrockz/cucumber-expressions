@@ -5,7 +5,9 @@ pub fn parse_expression(expression : String) -> Node!ExpressionError {
   let nodes = parse_tokens!(tokens)
   let nodes = split_alternations(nodes)
   let nodes = merge_text_nodes(nodes)
-  ExpressionNode(nodes)
+  let ast = ExpressionNode(nodes)
+  validate!(ast)
+  ast
 }
 
 ///|
