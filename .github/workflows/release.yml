@@ -1,0 +1,111 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      skip_publish:
+        description: "Skip mooncakes.io publish (for troubleshooting)"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: hustcer/setup-moonbit@v1
+
+      - uses: jdx/mise-action@v2
+        with:
+          install: true
+          cache: true
+
+      - name: Guard branch
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          BRANCH="${GITHUB_REF_NAME}"
+          if [ "$BRANCH" != "main" ]; then
+            echo "Error: Releases can only be triggered from main branch (current: $BRANCH)" >&2
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: moon update
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            VERSION="${{ github.ref_name }}"
+            VERSION="${VERSION#v}"
+          else
+            VERSION=$(mise run release:version)
+          fi
+          PRERELEASE=false
+          if [[ "$VERSION" == *-* ]]; then
+            PRERELEASE=true
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$PRERELEASE" >> "$GITHUB_OUTPUT"
+
+      - name: Pre-release checks
+        run: |
+          moon check
+          moon test
+
+  publish:
+    needs: validate
+    if: ${{ !(github.event.inputs.skip_publish == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: hustcer/setup-moonbit@v1
+
+      - uses: jdx/mise-action@v2
+        with:
+          install: true
+          cache: true
+
+      - name: Install dependencies
+        run: moon update
+
+      - name: Set up mooncakes credentials
+        run: mise run release:credentials
+        env:
+          MOONCAKES_USER_TOKEN: ${{ secrets.MOONCAKES_USER_TOKEN }}
+
+      - name: Publish to mooncakes.io
+        run: moon publish
+
+  release:
+    needs: [validate, publish]
+    if: |
+      always() &&
+      needs.validate.result == 'success' &&
+      (needs.publish.result == 'success' || needs.publish.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.validate.outputs.version }}
+          name: Release ${{ needs.validate.outputs.version }}
+          prerelease: ${{ needs.validate.outputs.prerelease }}
+          make_latest: true
