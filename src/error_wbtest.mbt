@@ -1,12 +1,12 @@
 ///|
 test "UnmatchedBrace construction and Show" {
-  let err : ExpressionError = UnmatchedBrace(
-    position=5,
-    message="Expected }",
+  let err : ExpressionError = UnmatchedBrace(position=5, message="Expected }")
+  inspect(
+    err,
+    content=(
+      #|UnmatchedBrace(position=5, message="Expected }")
+    ),
   )
-  inspect(err, content=(
-    #|UnmatchedBrace(position=5, message="Expected }")
-  ))
 }
 
 ///|
@@ -27,13 +27,13 @@ test "UnmatchedBrace message field" {
 
 ///|
 test "UnmatchedParen construction and Show" {
-  let err : ExpressionError = UnmatchedParen(
-    position=3,
-    message="Expected )",
+  let err : ExpressionError = UnmatchedParen(position=3, message="Expected )")
+  inspect(
+    err,
+    content=(
+      #|UnmatchedParen(position=3, message="Expected )")
+    ),
   )
-  inspect(err, content=(
-    #|UnmatchedParen(position=3, message="Expected )")
-  ))
 }
 
 ///|
@@ -59,9 +59,12 @@ test "CannotEscape construction and Show" {
     character='*',
     message="Cannot escape *",
   )
-  inspect(err, content=(
-    #|CannotEscape(position=7, character='*', message="Cannot escape *")
-  ))
+  inspect(
+    err,
+    content=(
+      #|CannotEscape(position=7, character='*', message="Cannot escape *")
+    ),
+  )
 }
 
 ///|
@@ -94,9 +97,12 @@ test "UnexpectedEscapeEnd construction and Show" {
     position=10,
     message="Unexpected end of escape",
   )
-  inspect(err, content=(
-    #|UnexpectedEscapeEnd(position=10, message="Unexpected end of escape")
-  ))
+  inspect(
+    err,
+    content=(
+      #|UnexpectedEscapeEnd(position=10, message="Unexpected end of escape")
+    ),
+  )
 }
 
 ///|
@@ -122,9 +128,12 @@ test "ValidationError construction and Show" {
     position=0,
     message="Nested optionals not allowed",
   )
-  inspect(err, content=(
-    #|ValidationError(position=0, message="Nested optionals not allowed")
-  ))
+  inspect(
+    err,
+    content=(
+      #|ValidationError(position=0, message="Nested optionals not allowed")
+    ),
+  )
 }
 
 ///|
@@ -150,17 +159,21 @@ test "UnknownParameterType construction and Show" {
     name="bigint",
     message="Unknown parameter type: bigint",
   )
-  inspect(err, content=(
-    #|UnknownParameterType(name="bigint", message="Unknown parameter type: bigint")
-  ))
+  inspect(
+    err,
+    content=(
+      #|UnknownParameterType(name="bigint", message="Unknown parameter type: bigint")
+    ),
+  )
 }
 
 ///|
 test "UnknownParameterType name field" {
-  match UnknownParameterType(
-    name="bigint",
-    message="Unknown parameter type: bigint",
-  ) {
+  match
+    UnknownParameterType(
+      name="bigint",
+      message="Unknown parameter type: bigint",
+    ) {
     UnknownParameterType(name~, ..) => inspect(name, content="bigint")
     _ => abort("unexpected variant")
   }
@@ -168,10 +181,11 @@ test "UnknownParameterType name field" {
 
 ///|
 test "UnknownParameterType message field" {
-  match UnknownParameterType(
-    name="bigint",
-    message="Unknown parameter type: bigint",
-  ) {
+  match
+    UnknownParameterType(
+      name="bigint",
+      message="Unknown parameter type: bigint",
+    ) {
     UnknownParameterType(message~, ..) =>
       inspect(message, content="Unknown parameter type: bigint")
     _ => abort("unexpected variant")

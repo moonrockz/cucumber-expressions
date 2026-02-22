@@ -1,8 +1,8 @@
 ///|
 /// Validate a parsed cucumber expression AST.
 /// Raises ValidationError for invalid expression structures.
-pub fn validate(node : Node) -> Unit!ExpressionError {
-  validate_node!(node, inside_optional=false)
+pub fn validate(node : Node) -> Unit raise ExpressionError {
+  validate_node(node, inside_optional=false)
 }
 
 ///|
@@ -11,12 +11,12 @@ pub fn validate(node : Node) -> Unit!ExpressionError {
 /// parameters inside optionals).
 fn validate_node(
   node : Node,
-  inside_optional~ : Bool
-) -> Unit!ExpressionError {
+  inside_optional~ : Bool,
+) -> Unit raise ExpressionError {
   match node {
     ExpressionNode(children) =>
       for child in children {
-        validate_node!(child, inside_optional~)
+        validate_node(child, inside_optional~)
       }
     OptionalNode(children) => {
       if inside_optional {
@@ -32,7 +32,7 @@ fn validate_node(
         )
       }
       for child in children {
-        validate_node!(child, inside_optional=true)
+        validate_node(child, inside_optional=true)
       }
     }
     ParameterNode(_) =>
@@ -42,7 +42,7 @@ fn validate_node(
           message="An optional may not contain a parameter",
         )
       }
-    AlternationNode(alternatives) => {
+    AlternationNode(alternatives) =>
       for arm in alternatives {
         // Each arm must have at least one TextNode
         let mut has_text = false
@@ -60,10 +60,9 @@ fn validate_node(
         }
         // Recursively validate children of each arm
         for child in arm {
-          validate_node!(child, inside_optional~)
+          validate_node(child, inside_optional~)
         }
       }
-    }
     TextNode(_) => ()
   }
 }

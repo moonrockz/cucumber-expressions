@@ -7,7 +7,6 @@ pub(all) struct Expression {
   /// For each parameter, the number of capture groups its regex pattern uses.
   /// This is needed because {string} uses multiple inner capture groups.
   priv group_counts : Array[Int]
-  priv registry : ParamTypeRegistry
 }
 
 ///|
@@ -25,7 +24,9 @@ pub(all) struct Param {
 
 ///|
 /// Parse a cucumber expression with the default parameter type registry.
-pub fn Expression::parse(expression : String) -> Expression!ExpressionError {
+pub fn Expression::parse(
+  expression : String,
+) -> Expression raise ExpressionError {
   Expression::parse_with_registry(expression, ParamTypeRegistry::default())
 }
 
@@ -34,21 +35,19 @@ pub fn Expression::parse(expression : String) -> Expression!ExpressionError {
 pub fn Expression::parse_with_registry(
   expression : String,
   registry : ParamTypeRegistry,
-) -> Expression!ExpressionError {
+) -> Expression raise ExpressionError {
   let ast = parse_expression(expression)
   let param_types = collect_param_types(ast, registry)
   let group_counts = collect_group_counts(ast, registry)
   let regex_str = compile(ast, registry)
-  let regex = try {
-    @regexp.compile(regex_str.view())
-  } catch {
+  let regex = @regexp.compile(regex_str.view()) catch {
     _ =>
       raise ExpressionError::ValidationError(
         position=0,
         message="Failed to compile regex: " + regex_str,
       )
   }
-  { source: expression, regex, param_types, group_counts, registry }
+  { source: expression, regex, param_types, group_counts }
 }
 
 ///|
@@ -76,9 +75,9 @@ pub fn Expression::match_(self : Expression, text : String) -> Match? {
         match outer {
           Some(sv) => {
             let s = sv.to_string()
-            if (s.starts_with("\"") && s.ends_with("\"")) ||
-              (s.starts_with("'") && s.ends_with("'")) {
-              s.substring(start=1, end=s.length() - 1)
+            if (s.has_prefix("\"") && s.has_suffix("\"")) ||
+              (s.has_prefix("'") && s.has_suffix("'")) {
+              s.view(start_offset=1, end_offset=s.length() - 1).to_string()
             } else {
               s
             }
@@ -86,17 +85,16 @@ pub fn Expression::match_(self : Expression, text : String) -> Match? {
           None => ""
         }
       }
-      _ => {
+      _ =>
         match mr.get(group_idx) {
           Some(sv) => sv.to_string()
           None => ""
         }
-      }
     }
     params.push({ value, type_ })
     group_idx = group_idx + num_groups
   }
-  Some({ params })
+  Some({ params, })
 }
 
 ///|

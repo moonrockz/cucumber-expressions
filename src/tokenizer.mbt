@@ -22,7 +22,7 @@ pub(all) enum Token {
 ///
 /// Converts the raw expression into a flat token stream. Does not validate
 /// matching braces or parentheses — that is the parser's responsibility.
-pub fn tokenize(expression : String) -> Array[Token]!ExpressionError {
+pub fn tokenize(expression : String) -> Array[Token] raise ExpressionError {
   let tokens : Array[Token] = []
   let buf = StringBuilder::new()
   let chars = expression.to_array()

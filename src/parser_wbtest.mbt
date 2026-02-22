@@ -1,80 +1,89 @@
 // Basic cases
 
+///|
 test "parse: simple text" {
-  let ast = parse_expression!("three blind mice")
-  inspect(ast, content=(
-    #|ExpressionNode([TextNode("three blind mice")])
-
-  ))
+  let ast = parse_expression("three blind mice")
+  inspect(
+    ast,
+    content=(
+      #|ExpressionNode([TextNode("three blind mice")])
+    ),
+  )
 }
 
+///|
 test "parse: parameter" {
-  let ast = parse_expression!("{string}")
+  let ast = parse_expression("{string}")
   inspect(ast, content="ExpressionNode([ParameterNode(\"string\")])")
 }
 
+///|
 test "parse: optional" {
-  let ast = parse_expression!("(blind)")
+  let ast = parse_expression("(blind)")
   inspect(ast, content="ExpressionNode([OptionalNode([TextNode(\"blind\")])])")
 }
 
+///|
 test "parse: empty expression" {
-  let ast = parse_expression!("")
+  let ast = parse_expression("")
   inspect(ast, content="ExpressionNode([])")
 }
 
+///|
 test "parse: anonymous parameter" {
-  let ast = parse_expression!("{}")
+  let ast = parse_expression("{}")
   inspect(ast, content="ExpressionNode([ParameterNode(\"\")])")
 }
 
 // Alternation
 
+///|
 test "parse: alternation" {
-  let ast = parse_expression!("mice/rats")
+  let ast = parse_expression("mice/rats")
   inspect(
     ast,
     content="ExpressionNode([AlternationNode([[TextNode(\"mice\")], [TextNode(\"rats\")]])])",
   )
 }
 
+///|
 test "parse: alternation in phrase" {
-  let ast = parse_expression!("three hungry/blind mice")
+  let ast = parse_expression("three hungry/blind mice")
   inspect(
     ast,
     content=(
       #|ExpressionNode([TextNode("three "), AlternationNode([[TextNode("hungry")], [TextNode("blind")]]), TextNode(" mice")])
-
     ),
   )
 }
 
 // Combined
 
+///|
 test "parse: optional in phrase" {
-  let ast = parse_expression!("three (blind) mice")
+  let ast = parse_expression("three (blind) mice")
   inspect(
     ast,
     content=(
       #|ExpressionNode([TextNode("three "), OptionalNode([TextNode("blind")]), TextNode(" mice")])
-
     ),
   )
 }
 
+///|
 test "parse: parameter with optional" {
-  let ast = parse_expression!("I have {int} cucumber(s)")
+  let ast = parse_expression("I have {int} cucumber(s)")
   inspect(
     ast,
     content=(
       #|ExpressionNode([TextNode("I have "), ParameterNode("int"), TextNode(" cucumber"), OptionalNode([TextNode("s")])])
-
     ),
   )
 }
 
+///|
 test "parse: alternation with optional" {
-  let ast = parse_expression!("a/b(c)")
+  let ast = parse_expression("a/b(c)")
   inspect(
     ast,
     content="ExpressionNode([AlternationNode([[TextNode(\"a\")], [TextNode(\"b\"), OptionalNode([TextNode(\"c\")])]])])",
@@ -83,22 +92,20 @@ test "parse: alternation with optional" {
 
 // Errors
 
+///|
 test "parse: unmatched brace" {
   let mut caught = false
-  try {
-    parse_expression!("{int") |> ignore
-  } catch {
+  try parse_expression("{int") |> ignore catch {
     ExpressionError::UnmatchedBrace(..) => caught = true
     _ => ()
   }
   inspect(caught, content="true")
 }
 
+///|
 test "parse: unmatched paren" {
   let mut caught = false
-  try {
-    parse_expression!("(blind") |> ignore
-  } catch {
+  try parse_expression("(blind") |> ignore catch {
     ExpressionError::UnmatchedParen(..) => caught = true
     _ => ()
   }
@@ -107,8 +114,9 @@ test "parse: unmatched paren" {
 
 // Multi-way alternation
 
+///|
 test "parse: multi-way alternation" {
-  let ast = parse_expression!("a/b/c")
+  let ast = parse_expression("a/b/c")
   inspect(
     ast,
     content="ExpressionNode([AlternationNode([[TextNode(\"a\")], [TextNode(\"b\")], [TextNode(\"c\")]])])",
@@ -117,11 +125,10 @@ test "parse: multi-way alternation" {
 
 // Trailing slash — now rejected by validator (empty arm has no text)
 
+///|
 test "parse: trailing slash rejected" {
   let mut caught = false
-  try {
-    parse_expression!("cats/") |> ignore
-  } catch {
+  try parse_expression("cats/") |> ignore catch {
     ExpressionError::ValidationError(..) => caught = true
     _ => ()
   }
@@ -130,11 +137,10 @@ test "parse: trailing slash rejected" {
 
 // Leading slash — now rejected by validator (empty arm has no text)
 
+///|
 test "parse: leading slash rejected" {
   let mut caught = false
-  try {
-    parse_expression!("/cats") |> ignore
-  } catch {
+  try parse_expression("/cats") |> ignore catch {
     ExpressionError::ValidationError(..) => caught = true
     _ => ()
   }
@@ -143,8 +149,9 @@ test "parse: leading slash rejected" {
 
 // Parameter as alternation boundary
 
+///|
 test "parse: parameter as left boundary for alternation" {
-  let ast = parse_expression!("{int}st/nd/rd/th")
+  let ast = parse_expression("{int}st/nd/rd/th")
   inspect(
     ast,
     content="ExpressionNode([ParameterNode(\"int\"), AlternationNode([[TextNode(\"st\")], [TextNode(\"nd\")], [TextNode(\"rd\")], [TextNode(\"th\")]])])",

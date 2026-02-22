@@ -1,19 +1,19 @@
 ///|
 /// Parse a cucumber expression string into an AST.
-pub fn parse_expression(expression : String) -> Node!ExpressionError {
-  let tokens = tokenize!(expression)
-  let nodes = parse_tokens!(tokens)
+pub fn parse_expression(expression : String) -> Node raise ExpressionError {
+  let tokens = tokenize(expression)
+  let nodes = parse_tokens(tokens)
   let nodes = split_alternations(nodes)
   let nodes = merge_text_nodes(nodes)
   let ast = ExpressionNode(nodes)
-  validate!(ast)
+  validate(ast)
   ast
 }
 
 ///|
 /// First pass: convert token stream into AST nodes, handling parameters and
 /// optionals (which require matching delimiters).
-fn parse_tokens(tokens : Array[Token]) -> Array[Node]!ExpressionError {
+fn parse_tokens(tokens : Array[Token]) -> Array[Node] raise ExpressionError {
   let result : Array[Node] = []
   let len = tokens.length()
   let mut i = 0
@@ -93,7 +93,7 @@ fn parse_tokens(tokens : Array[Token]) -> Array[Node]!ExpressionError {
             message="Missing closing parenthesis ')'",
           )
         }
-        let children = parse_tokens!(inner_tokens)
+        let children = parse_tokens(inner_tokens)
         result.push(OptionalNode(children))
       }
       EndOptional => {
@@ -191,11 +191,10 @@ fn split_alternations(nodes : Array[Node]) -> Array[Node] {
                   current_arm.push(nodes[i])
                   i = i + 1
                 }
-              ParameterNode(_) => {
+              ParameterNode(_) =>
                 // Parameter node acts as alternation boundary per spec
                 // (bounded by `{` / `}`)
                 break
-              }
               _ => {
                 current_arm.push(nodes[i])
                 i = i + 1
@@ -270,7 +269,8 @@ fn merge_text_nodes(nodes : Array[Node]) -> Array[Node] {
           buf.reset()
         }
         match node {
-          OptionalNode(children) => result.push(OptionalNode(merge_text_nodes(children)))
+          OptionalNode(children) =>
+            result.push(OptionalNode(merge_text_nodes(children)))
           AlternationNode(alternatives) => {
             let merged_alts : Array[Array[Node]] = []
             for alt in alternatives {

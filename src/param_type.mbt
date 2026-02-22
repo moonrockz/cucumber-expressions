@@ -25,21 +25,12 @@ pub fn ParamTypeRegistry::new() -> ParamTypeRegistry {
 pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
   let reg = ParamTypeRegistry::new()
   reg.register("int", ParamType::Int, ["(?:-?\\d+)", "(?:\\d+)"])
-  reg.register(
-    "float",
-    ParamType::Float,
-    [
-      "(?:[+-]?(?:\\d+|\\d+\\.\\d*|\\d*\\.\\d+)(?:[eE][+-]?\\d+)?)",
-    ],
-  )
-  reg.register(
-    "string",
-    ParamType::String_,
-    [
-      "\"([^\"\\\\]*(\\\\.[^\"\\\\]*)*)\"",
-      "'([^'\\\\]*(\\\\.[^'\\\\]*)*)'",
-    ],
-  )
+  reg.register("float", ParamType::Float, [
+    "(?:[+-]?(?:\\d+|\\d+\\.\\d*|\\d*\\.\\d+)(?:[eE][+-]?\\d+)?)",
+  ])
+  reg.register("string", ParamType::String_, [
+    "\"([^\"\\\\]*(\\\\.[^\"\\\\]*)*)\"", "'([^'\\\\]*(\\\\.[^'\\\\]*)*)'",
+  ])
   reg.register("word", ParamType::Word, ["[^\\s]+"])
   reg.register("", ParamType::Anonymous, [".*"])
   reg

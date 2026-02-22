@@ -27,9 +27,11 @@ test "AlternationNode construction and Show" {
 
 ///|
 test "ExpressionNode construction and Show" {
-  let node = ExpressionNode(
-    [TextNode("I have "), ParameterNode("int"), TextNode(" cukes")],
-  )
+  let node = ExpressionNode([
+    TextNode("I have "),
+    ParameterNode("int"),
+    TextNode(" cukes"),
+  ])
   inspect(
     node,
     content="ExpressionNode([TextNode(\"I have \"), ParameterNode(\"int\"), TextNode(\" cukes\")])",
