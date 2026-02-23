@@ -1,4 +1,22 @@
 ///|
+/// A regex pattern used for matching parameter types in cucumber expressions.
+pub(all) struct RegexPattern {
+  priv value : String
+
+  fn new(value : String) -> RegexPattern
+} derive(Show, Eq)
+
+///|
+fn RegexPattern::new(value : String) -> RegexPattern {
+  { value, }
+}
+
+///|
+pub fn RegexPattern::to_string(self : RegexPattern) -> String {
+  self.value
+}
+
+///|
 /// Parameter types supported by cucumber expressions.
 pub(all) enum ParamType {
   Int

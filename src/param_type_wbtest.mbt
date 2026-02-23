@@ -134,3 +134,18 @@ test "Custom type registration works" {
     None => abort("expected color to be registered")
   }
 }
+
+///|
+test "RegexPattern round-trip" {
+  let rp = RegexPattern("\\d+")
+  assert_eq(rp.to_string(), "\\d+")
+}
+
+///|
+test "RegexPattern equality" {
+  let a = RegexPattern("abc")
+  let b = RegexPattern("abc")
+  let c = RegexPattern("xyz")
+  assert_eq(a, b)
+  assert_true(a != c)
+}
