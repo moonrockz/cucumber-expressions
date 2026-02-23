@@ -30,15 +30,15 @@ pub fn compile(
     TextNode(text) => escape_regex(text)
     ParameterNode(name) =>
       match registry.get(name) {
-        Some((_type, patterns)) => {
+        Some(entry) => {
           let buf = StringBuilder::new()
           buf.write_char('(')
-          for i, pat in patterns {
+          for i, pat in entry.patterns {
             if i > 0 {
               buf.write_char('|')
             }
             buf.write_string("(?:")
-            buf.write_string(pat)
+            buf.write_string(pat.to_string())
             buf.write_char(')')
           }
           buf.write_char(')')
