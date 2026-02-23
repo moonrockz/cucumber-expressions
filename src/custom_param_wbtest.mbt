@@ -1,7 +1,9 @@
 ///|
 test "custom param: register and match color" {
   let reg = ParamTypeRegistry::default()
-  reg.register("color", ParamType::Custom("color"), ["red|blue|green"])
+  reg.register("color", ParamType::Custom("color"), [
+    RegexPattern("red|blue|green"),
+  ])
   let expr = Expression::parse_with_registry("I select {color}", reg)
   let result = expr.match_("I select blue")
   guard result is Some(m) else { fail("expected match") }
@@ -19,7 +21,7 @@ test "custom param: register and match color" {
 test "custom param: register and match direction" {
   let reg = ParamTypeRegistry::default()
   reg.register("direction", ParamType::Custom("direction"), [
-    "north|south|east|west",
+    RegexPattern("north|south|east|west"),
   ])
   let expr = Expression::parse_with_registry("go {direction}", reg)
   let result = expr.match_("go north")
@@ -48,7 +50,9 @@ test "custom param: unknown type without custom registry" {
 ///|
 test "custom param: mixed built-in and custom" {
   let reg = ParamTypeRegistry::default()
-  reg.register("color", ParamType::Custom("color"), ["red|blue|green"])
+  reg.register("color", ParamType::Custom("color"), [
+    RegexPattern("red|blue|green"),
+  ])
   let expr = Expression::parse_with_registry(
     "I have {int} {color} cucumbers", reg,
   )
@@ -69,7 +73,9 @@ test "custom param: mixed built-in and custom" {
 ///|
 test "custom param: no match with custom type" {
   let reg = ParamTypeRegistry::default()
-  reg.register("color", ParamType::Custom("color"), ["red|blue|green"])
+  reg.register("color", ParamType::Custom("color"), [
+    RegexPattern("red|blue|green"),
+  ])
   let expr = Expression::parse_with_registry("I select {color}", reg)
   let result = expr.match_("I select purple")
   inspect(result, content="None")

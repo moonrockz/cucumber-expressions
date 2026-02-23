@@ -108,7 +108,7 @@ fn collect_param_types(
     match n {
       ParameterNode(name) =>
         match registry.get(name) {
-          Some((type_, _)) => types.push(type_)
+          Some(entry) => types.push(entry.type_)
           None => () // error already caught during compile
         }
       ExpressionNode(children) | OptionalNode(children) =>
@@ -139,7 +139,7 @@ fn collect_group_counts(
     match n {
       ParameterNode(name) =>
         match registry.get(name) {
-          Some((_, patterns)) => counts.push(count_capture_groups(patterns))
+          Some(entry) => counts.push(count_capture_groups(entry.patterns))
           None => counts.push(1)
         }
       ExpressionNode(children) | OptionalNode(children) =>
@@ -164,10 +164,10 @@ fn collect_group_counts(
 /// of a parameter's patterns. The compiler wraps patterns in one outer
 /// capturing group: `((?:pat1)|(?:pat2))`, so we start with 1 for the outer
 /// group, then add any inner capturing groups from the patterns themselves.
-fn count_capture_groups(patterns : Array[String]) -> Int {
+fn count_capture_groups(patterns : Array[RegexPattern]) -> Int {
   let mut count = 1 // the outer capturing group added by the compiler
   for pat in patterns {
-    count = count + count_groups_in_pattern(pat)
+    count = count + count_groups_in_pattern(pat.to_string())
   }
   count
 }

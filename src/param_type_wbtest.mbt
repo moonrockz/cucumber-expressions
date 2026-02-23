@@ -48,18 +48,18 @@ test "ParamType equality" {
 ///|
 test "ParamTypeRegistry::default has 5 built-in types" {
   let reg = ParamTypeRegistry::default()
-  inspect(reg.entries.length(), content="5")
+  inspect(reg.entries_view().length(), content="5")
 }
 
 ///|
 test "Registry get int returns correct type and patterns" {
   let reg = ParamTypeRegistry::default()
   match reg.get("int") {
-    Some((type_, patterns)) => {
-      assert_true(type_ == ParamType::Int)
-      inspect(patterns.length(), content="2")
-      inspect(patterns[0], content="(?:-?\\d+)")
-      inspect(patterns[1], content="(?:\\d+)")
+    Some(entry) => {
+      assert_true(entry.type_ == ParamType::Int)
+      inspect(entry.patterns.length(), content="2")
+      inspect(entry.patterns[0].to_string(), content="(?:-?\\d+)")
+      inspect(entry.patterns[1].to_string(), content="(?:\\d+)")
     }
     None => abort("expected int to be registered")
   }
@@ -69,9 +69,9 @@ test "Registry get int returns correct type and patterns" {
 test "Registry get float returns correct type and patterns" {
   let reg = ParamTypeRegistry::default()
   match reg.get("float") {
-    Some((type_, patterns)) => {
-      assert_true(type_ == ParamType::Float)
-      inspect(patterns.length(), content="1")
+    Some(entry) => {
+      assert_true(entry.type_ == ParamType::Float)
+      inspect(entry.patterns.length(), content="1")
     }
     None => abort("expected float to be registered")
   }
@@ -81,9 +81,9 @@ test "Registry get float returns correct type and patterns" {
 test "Registry get string returns correct type and patterns" {
   let reg = ParamTypeRegistry::default()
   match reg.get("string") {
-    Some((type_, patterns)) => {
-      assert_true(type_ == ParamType::String_)
-      inspect(patterns.length(), content="2")
+    Some(entry) => {
+      assert_true(entry.type_ == ParamType::String_)
+      inspect(entry.patterns.length(), content="2")
     }
     None => abort("expected string to be registered")
   }
@@ -93,10 +93,10 @@ test "Registry get string returns correct type and patterns" {
 test "Registry get word returns correct type and patterns" {
   let reg = ParamTypeRegistry::default()
   match reg.get("word") {
-    Some((type_, patterns)) => {
-      assert_true(type_ == ParamType::Word)
-      inspect(patterns.length(), content="1")
-      inspect(patterns[0], content="[^\\s]+")
+    Some(entry) => {
+      assert_true(entry.type_ == ParamType::Word)
+      inspect(entry.patterns.length(), content="1")
+      inspect(entry.patterns[0].to_string(), content="[^\\s]+")
     }
     None => abort("expected word to be registered")
   }
@@ -106,10 +106,10 @@ test "Registry get word returns correct type and patterns" {
 test "Registry get anonymous returns correct type and patterns" {
   let reg = ParamTypeRegistry::default()
   match reg.get("") {
-    Some((type_, patterns)) => {
-      assert_true(type_ == ParamType::Anonymous)
-      inspect(patterns.length(), content="1")
-      inspect(patterns[0], content=".*")
+    Some(entry) => {
+      assert_true(entry.type_ == ParamType::Anonymous)
+      inspect(entry.patterns.length(), content="1")
+      inspect(entry.patterns[0].to_string(), content=".*")
     }
     None => abort("expected anonymous to be registered")
   }
@@ -124,13 +124,61 @@ test "Registry get unknown returns None" {
 ///|
 test "Custom type registration works" {
   let reg = ParamTypeRegistry::default()
-  reg.register("color", ParamType::Custom("color"), ["red|green|blue"])
+  reg.register("color", ParamType::Custom("color"), [
+    RegexPattern("red|green|blue"),
+  ])
   match reg.get("color") {
-    Some((type_, patterns)) => {
-      assert_true(type_ == ParamType::Custom("color"))
-      inspect(patterns.length(), content="1")
-      inspect(patterns[0], content="red|green|blue")
+    Some(entry) => {
+      assert_true(entry.type_ == ParamType::Custom("color"))
+      inspect(entry.patterns.length(), content="1")
+      inspect(entry.patterns[0].to_string(), content="red|green|blue")
     }
     None => abort("expected color to be registered")
   }
+}
+
+///|
+test "RegexPattern round-trip" {
+  let rp = RegexPattern("\\d+")
+  assert_eq(rp.to_string(), "\\d+")
+}
+
+///|
+test "RegexPattern equality" {
+  let a = RegexPattern("abc")
+  let b = RegexPattern("abc")
+  let c = RegexPattern("xyz")
+  assert_eq(a, b)
+  assert_true(a != c)
+}
+
+///|
+test "ParamTypeEntry fields are accessible" {
+  let entry : ParamTypeEntry = {
+    name: "color",
+    type_: ParamType::Custom("color"),
+    patterns: [RegexPattern("red|blue|green")],
+  }
+  assert_eq(entry.name, "color")
+  assert_eq(entry.type_, ParamType::Custom("color"))
+  assert_eq(entry.patterns[0].to_string(), "red|blue|green")
+}
+
+///|
+test "entries_view returns all registered types" {
+  let reg = ParamTypeRegistry::default()
+  let view = reg.entries_view()
+  assert_eq(view.length(), 5)
+  assert_eq(view[0].name, "int")
+  assert_eq(view[0].type_, ParamType::Int)
+}
+
+///|
+test "get returns ParamTypeEntry" {
+  let reg = ParamTypeRegistry::default()
+  let entry = reg.get("int")
+  guard entry is Some(e)
+  assert_eq(e.name, "int")
+  assert_eq(e.type_, ParamType::Int)
+  assert_true(e.patterns.length() > 0)
 }
