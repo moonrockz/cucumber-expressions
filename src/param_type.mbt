@@ -55,9 +55,7 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
     RegexPattern("(?:\\d+)"),
   ])
   reg.register("float", ParamType::Float, [
-    RegexPattern(
-      "(?:[+-]?(?:\\d+|\\d+\\.\\d*|\\d*\\.\\d+)(?:[eE][+-]?\\d+)?)",
-    ),
+    RegexPattern("(?:[+-]?(?:\\d+|\\d+\\.\\d*|\\d*\\.\\d+)(?:[eE][+-]?\\d+)?)"),
   ])
   reg.register("string", ParamType::String_, [
     RegexPattern("\"([^\"\\\\]*(\\\\.[^\"\\\\]*)*)\""),
