@@ -203,6 +203,69 @@ test "spec/match: anonymous" {
   inspect(m.params[0].type_, content="Anonymous")
 }
 
+///|
+test "spec/match: double" {
+  let expr = Expression::parse("the value is {double}")
+  let result = expr.match_("the value is 3.14")
+  guard result is Some(m) else { fail("expected match") }
+  assert_eq(m.params[0].value, ParamValue::DoubleVal(3.14))
+  assert_eq(m.params[0].raw, "3.14")
+  assert_eq(m.params[0].type_, ParamType::Double_)
+}
+
+///|
+test "spec/match: double scientific notation" {
+  let expr = Expression::parse("the value is {double}")
+  let result = expr.match_("the value is 1.5e10")
+  guard result is Some(m) else { fail("expected match") }
+  assert_eq(m.params[0].raw, "1.5e10")
+}
+
+///|
+test "spec/match: long" {
+  let expr = Expression::parse("I have {long} items")
+  let result = expr.match_("I have 9223372036854775807 items")
+  guard result is Some(m) else { fail("expected match") }
+  assert_eq(m.params[0].value, ParamValue::LongVal(9223372036854775807L))
+  assert_eq(m.params[0].raw, "9223372036854775807")
+}
+
+///|
+test "spec/match: byte" {
+  let expr = Expression::parse("value is {byte}")
+  let result = expr.match_("value is 127")
+  guard result is Some(m) else { fail("expected match") }
+  assert_eq(m.params[0].value, ParamValue::ByteVal(b'\x7F'))
+  assert_eq(m.params[0].raw, "127")
+}
+
+///|
+test "spec/match: short" {
+  let expr = Expression::parse("port is {short}")
+  let result = expr.match_("port is 8080")
+  guard result is Some(m) else { fail("expected match") }
+  assert_eq(m.params[0].value, ParamValue::ShortVal(8080))
+  assert_eq(m.params[0].raw, "8080")
+}
+
+///|
+test "spec/match: bigdecimal" {
+  let expr = Expression::parse("price is {bigdecimal}")
+  let result = expr.match_("price is 99.99")
+  guard result is Some(m) else { fail("expected match") }
+  assert_eq(m.params[0].value, ParamValue::BigDecimalVal(@decimal.Decimal::from_string("99.99").unwrap()))
+  assert_eq(m.params[0].raw, "99.99")
+}
+
+///|
+test "spec/match: biginteger" {
+  let expr = Expression::parse("count is {biginteger}")
+  let result = expr.match_("count is 123456789012345678901234567890")
+  guard result is Some(m) else { fail("expected match") }
+  assert_eq(m.params[0].value, ParamValue::BigIntegerVal(BigInt::from_string("123456789012345678901234567890")))
+  assert_eq(m.params[0].raw, "123456789012345678901234567890")
+}
+
 // --- Optional text ---
 
 ///|
