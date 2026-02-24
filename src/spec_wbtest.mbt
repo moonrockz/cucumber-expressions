@@ -145,7 +145,7 @@ test "spec/match: int" {
   let result = expr.match_("I have 42 cucumbers")
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="1")
-  inspect(m.params[0].value, content="42")
+  inspect(m.params[0].raw, content="42")
   inspect(m.params[0].type_, content="Int")
 }
 
@@ -154,7 +154,7 @@ test "spec/match: negative int" {
   let expr = Expression::parse("I have {int} cucumbers")
   let result = expr.match_("I have -5 cucumbers")
   guard result is Some(m) else { fail("expected match") }
-  inspect(m.params[0].value, content="-5")
+  inspect(m.params[0].raw, content="-5")
   inspect(m.params[0].type_, content="Int")
 }
 
@@ -163,7 +163,7 @@ test "spec/match: float" {
   let expr = Expression::parse("I have {float} cucumbers")
   let result = expr.match_("I have 3.14 cucumbers")
   guard result is Some(m) else { fail("expected match") }
-  inspect(m.params[0].value, content="3.14")
+  inspect(m.params[0].raw, content="3.14")
   inspect(m.params[0].type_, content="Float")
 }
 
@@ -172,7 +172,7 @@ test "spec/match: word" {
   let expr = Expression::parse("a {word} step")
   let result = expr.match_("a good step")
   guard result is Some(m) else { fail("expected match") }
-  inspect(m.params[0].value, content="good")
+  inspect(m.params[0].raw, content="good")
   inspect(m.params[0].type_, content="Word")
 }
 
@@ -181,7 +181,7 @@ test "spec/match: double-quoted string" {
   let expr = Expression::parse("I select {string}")
   let result = expr.match_("I select \"blue\"")
   guard result is Some(m) else { fail("expected match") }
-  inspect(m.params[0].value, content="blue")
+  inspect(m.params[0].raw, content="blue")
   inspect(m.params[0].type_, content="String_")
 }
 
@@ -190,7 +190,7 @@ test "spec/match: single-quoted string" {
   let expr = Expression::parse("I select {string}")
   let result = expr.match_("I select 'red'")
   guard result is Some(m) else { fail("expected match") }
-  inspect(m.params[0].value, content="red")
+  inspect(m.params[0].raw, content="red")
   inspect(m.params[0].type_, content="String_")
 }
 
@@ -199,7 +199,7 @@ test "spec/match: anonymous" {
   let expr = Expression::parse("{}")
   let result = expr.match_("anything")
   guard result is Some(m) else { fail("expected match") }
-  inspect(m.params[0].value, content="anything")
+  inspect(m.params[0].raw, content="anything")
   inspect(m.params[0].type_, content="Anonymous")
 }
 
@@ -210,7 +210,7 @@ test "spec/match: optional present" {
   let expr = Expression::parse("{int} cucumber(s)")
   let result = expr.match_("5 cucumbers")
   guard result is Some(m) else { fail("expected match") }
-  inspect(m.params[0].value, content="5")
+  inspect(m.params[0].raw, content="5")
   inspect(m.params[0].type_, content="Int")
 }
 
@@ -219,7 +219,7 @@ test "spec/match: optional absent" {
   let expr = Expression::parse("{int} cucumber(s)")
   let result = expr.match_("1 cucumber")
   guard result is Some(m) else { fail("expected match") }
-  inspect(m.params[0].value, content="1")
+  inspect(m.params[0].raw, content="1")
   inspect(m.params[0].type_, content="Int")
 }
 
@@ -300,9 +300,9 @@ test "spec/match: two int params" {
   let result = expr.match_("3 + 5")
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="2")
-  inspect(m.params[0].value, content="3")
+  inspect(m.params[0].raw, content="3")
   inspect(m.params[0].type_, content="Int")
-  inspect(m.params[1].value, content="5")
+  inspect(m.params[1].raw, content="5")
   inspect(m.params[1].type_, content="Int")
 }
 
@@ -312,9 +312,9 @@ test "spec/match: mixed param types" {
   let result = expr.match_("apple costs 1.50")
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="2")
-  inspect(m.params[0].value, content="apple")
+  inspect(m.params[0].raw, content="apple")
   inspect(m.params[0].type_, content="Word")
-  inspect(m.params[1].value, content="1.50")
+  inspect(m.params[1].raw, content="1.50")
   inspect(m.params[1].type_, content="Float")
 }
 
@@ -324,9 +324,9 @@ test "spec/match: int and string params" {
   let result = expr.match_("42 \"hello\"")
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="2")
-  inspect(m.params[0].value, content="42")
+  inspect(m.params[0].raw, content="42")
   inspect(m.params[0].type_, content="Int")
-  inspect(m.params[1].value, content="hello")
+  inspect(m.params[1].raw, content="hello")
   inspect(m.params[1].type_, content="String_")
 }
 

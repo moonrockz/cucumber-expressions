@@ -4,6 +4,7 @@ pub(all) struct Expression {
   priv source : String
   priv regex : @regexp.Regexp
   priv param_types : Array[ParamType]
+  priv transformers : Array[Transformer]
   /// For each parameter, the number of capture groups its regex pattern uses.
   /// This is needed because {string} uses multiple inner capture groups.
   priv group_counts : Array[Int]
@@ -18,8 +19,9 @@ pub(all) struct Match {
 ///|
 /// An extracted parameter value.
 pub(all) struct Param {
-  value : String
+  value : ParamValue
   type_ : ParamType
+  raw : String
 } derive(Show, Eq)
 
 ///|
@@ -38,6 +40,7 @@ pub fn Expression::parse_with_registry(
 ) -> Expression raise ExpressionError {
   let ast = parse_expression(expression)
   let param_types = collect_param_types(ast, registry)
+  let transformers = collect_transformers(ast, registry)
   let group_counts = collect_group_counts(ast, registry)
   let regex_str = compile(ast, registry)
   let regex = @regexp.compile(regex_str.view()) catch {
@@ -47,7 +50,7 @@ pub fn Expression::parse_with_registry(
         message="Failed to compile regex: " + regex_str,
       )
   }
-  { source: expression, regex, param_types, group_counts }
+  { source: expression, regex, param_types, transformers, group_counts }
 }
 
 ///|
@@ -66,7 +69,7 @@ pub fn Expression::match_(self : Expression, text : String) -> Match? {
   let mut group_idx = 1 // group 0 is full match
   for i, type_ in self.param_types {
     let num_groups = self.group_counts[i]
-    let value = match type_ {
+    let raw_value = match type_ {
       ParamType::String_ => {
         // {string} has multiple capture groups. The outer group (group_idx)
         // captures the full match including quotes. Inner groups capture content.
@@ -91,7 +94,13 @@ pub fn Expression::match_(self : Expression, text : String) -> Match? {
           None => ""
         }
     }
-    params.push({ value, type_ })
+    // Apply transformer to get typed value
+    let transformed = try {
+      self.transformers[i].call([raw_value])
+    } catch {
+      _ => ParamValue::AnonymousVal(raw_value)
+    }
+    params.push({ value: transformed, type_, raw: raw_value })
     group_idx = group_idx + num_groups
   }
   Some({ params, })
@@ -126,6 +135,37 @@ fn collect_param_types(
   }
   walk(node)
   types
+}
+
+///|
+/// Collect transformers from AST nodes in order.
+fn collect_transformers(
+  node : Node,
+  registry : ParamTypeRegistry,
+) -> Array[Transformer] {
+  let transformers : Array[Transformer] = []
+  fn walk(n : Node) {
+    match n {
+      ParameterNode(name) =>
+        match registry.get(name) {
+          Some(entry) => transformers.push(entry.transformer)
+          None => ()
+        }
+      ExpressionNode(children) | OptionalNode(children) =>
+        for child in children {
+          walk(child)
+        }
+      AlternationNode(arms) =>
+        for arm in arms {
+          for node in arm {
+            walk(node)
+          }
+        }
+      TextNode(_) => ()
+    }
+  }
+  walk(node)
+  transformers
 }
 
 ///|

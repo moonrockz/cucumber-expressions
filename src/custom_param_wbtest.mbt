@@ -8,7 +8,7 @@ test "custom param: register and match color" {
   let result = expr.match_("I select blue")
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="1")
-  inspect(m.params[0].value, content="blue")
+  inspect(m.params[0].raw, content="blue")
   inspect(
     m.params[0].type_,
     content=(
@@ -27,7 +27,7 @@ test "custom param: register and match direction" {
   let result = expr.match_("go north")
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="1")
-  inspect(m.params[0].value, content="north")
+  inspect(m.params[0].raw, content="north")
   inspect(
     m.params[0].type_,
     content=(
@@ -59,9 +59,9 @@ test "custom param: mixed built-in and custom" {
   let result = expr.match_("I have 5 red cucumbers")
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="2")
-  inspect(m.params[0].value, content="5")
+  inspect(m.params[0].raw, content="5")
   inspect(m.params[0].type_, content="Int")
-  inspect(m.params[1].value, content="red")
+  inspect(m.params[1].raw, content="red")
   inspect(
     m.params[1].type_,
     content=(
