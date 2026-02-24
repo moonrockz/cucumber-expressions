@@ -34,14 +34,52 @@ test "ParamType::Custom Show" {
 }
 
 ///|
+test "ParamType::Double_ Show" {
+  inspect(ParamType::Double_, content="Double_")
+}
+
+///|
+test "ParamType::Long Show" {
+  inspect(ParamType::Long, content="Long")
+}
+
+///|
+test "ParamType::Byte Show" {
+  inspect(ParamType::Byte, content="Byte")
+}
+
+///|
+test "ParamType::Short Show" {
+  inspect(ParamType::Short, content="Short")
+}
+
+///|
+test "ParamType::BigDecimal Show" {
+  inspect(ParamType::BigDecimal, content="BigDecimal")
+}
+
+///|
+test "ParamType::BigInteger Show" {
+  inspect(ParamType::BigInteger, content="BigInteger")
+}
+
+///|
 test "ParamType equality" {
   assert_true(ParamType::Int == ParamType::Int)
   assert_true(ParamType::Float == ParamType::Float)
   assert_true(ParamType::String_ == ParamType::String_)
   assert_true(ParamType::Word == ParamType::Word)
   assert_true(ParamType::Anonymous == ParamType::Anonymous)
+  assert_true(ParamType::Double_ == ParamType::Double_)
+  assert_true(ParamType::Long == ParamType::Long)
+  assert_true(ParamType::Byte == ParamType::Byte)
+  assert_true(ParamType::Short == ParamType::Short)
+  assert_true(ParamType::BigDecimal == ParamType::BigDecimal)
+  assert_true(ParamType::BigInteger == ParamType::BigInteger)
   assert_true(ParamType::Custom("x") == ParamType::Custom("x"))
   assert_true(ParamType::Int != ParamType::Float)
+  assert_true(ParamType::Double_ != ParamType::Float)
+  assert_true(ParamType::Long != ParamType::Int)
   assert_true(ParamType::Custom("a") != ParamType::Custom("b"))
 }
 

@@ -24,6 +24,12 @@ pub(all) enum ParamType {
   String_
   Word
   Anonymous
+  Double_
+  Long
+  Byte
+  Short
+  BigDecimal
+  BigInteger
   Custom(String)
 } derive(Show, Eq, ToJson, FromJson)
 
