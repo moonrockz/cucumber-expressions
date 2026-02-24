@@ -80,3 +80,48 @@ test "custom param: no match with custom type" {
   let result = expr.match_("I select purple")
   inspect(result, content="None")
 }
+
+///|
+test "Custom type with transformer returns CustomVal with typed Any" {
+  let reg = ParamTypeRegistry::default()
+  reg.register(
+    "color",
+    ParamType::Custom("color"),
+    [RegexPattern("red|green|blue")],
+    transformer=Transformer::new(
+      fn(groups) raise {
+        CustomVal(@any.of(groups[0][:].to_upper().to_string()))
+      },
+    ),
+  )
+  let expr = Expression::parse_with_registry("I select {color}", reg)
+  let result = expr.match_("I select red")
+  guard result is Some(m) else { fail("expected match") }
+  match m.params[0].value {
+    CustomVal(any) => {
+      let s : String = any.to()
+      assert_eq(s, "RED")
+    }
+    _ => fail("expected CustomVal")
+  }
+  assert_eq(m.params[0].raw, "red")
+}
+
+///|
+test "Custom type without transformer defaults to CustomVal with raw string" {
+  let reg = ParamTypeRegistry::default()
+  reg.register("direction", ParamType::Custom("direction"), [
+    RegexPattern("north|south|east|west"),
+  ])
+  let expr = Expression::parse_with_registry("go {direction}", reg)
+  let result = expr.match_("go north")
+  guard result is Some(m) else { fail("expected match") }
+  match m.params[0].value {
+    CustomVal(any) => {
+      let s : String = any.to()
+      assert_eq(s, "north")
+    }
+    _ => fail("expected CustomVal")
+  }
+  assert_eq(m.params[0].raw, "north")
+}
