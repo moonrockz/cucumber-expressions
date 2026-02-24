@@ -3,12 +3,19 @@
   "version": "0.2.0",
   "deps": {
     "moonbitlang/x": "0.4.40",
-    "moonbitlang/regexp": "0.3.5"
+    "moonbitlang/regexp": "0.3.5",
+    "tonyfettes/any": "0.1.5"
   },
   "readme": "README.mbt.md",
   "repository": "https://github.com/moonrockz/cucumber-expressions",
   "license": "Apache-2.0",
-  "keywords": ["cucumber", "expressions", "bdd", "testing", "gherkin"],
+  "keywords": [
+    "cucumber",
+    "expressions",
+    "bdd",
+    "testing",
+    "gherkin"
+  ],
   "description": "Cucumber Expressions parser and matcher for MoonBit",
   "source": "src"
 }

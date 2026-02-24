@@ -34,12 +34,23 @@ pub(all) enum ParamType {
 } derive(Show, Eq, ToJson, FromJson)
 
 ///|
-/// A registered parameter type entry with name, type, and regex patterns.
+/// A registered parameter type entry with name, type, regex patterns, and transformer.
 pub(all) struct ParamTypeEntry {
   name : String
   type_ : ParamType
   patterns : Array[RegexPattern]
-} derive(Show, Eq)
+  transformer : Transformer
+}
+
+///|
+impl Show for ParamTypeEntry with output(self, logger) {
+  logger.write_string("ParamTypeEntry { name: \{self.name}, type_: \{self.type_}, patterns: \{self.patterns} }")
+}
+
+///|
+impl Eq for ParamTypeEntry with equal(self, other) -> Bool {
+  self.name == other.name && self.type_ == other.type_ && self.patterns == other.patterns
+}
 
 ///|
 /// Registry mapping parameter type names to their regex patterns.
@@ -78,8 +89,9 @@ pub fn ParamTypeRegistry::register(
   name : String,
   type_ : ParamType,
   patterns : Array[RegexPattern],
+  transformer~ : Transformer = Transformer::new(fn(groups) { ParamValue::CustomVal(@any.of(groups[0])) }),
 ) -> Unit {
-  self.entries.push({ name, type_, patterns })
+  self.entries.push({ name, type_, patterns, transformer })
 }
 
 ///|

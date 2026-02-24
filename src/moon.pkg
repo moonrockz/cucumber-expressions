@@ -1,4 +1,7 @@
 import {
   "moonbitlang/core/json",
+  "moonbitlang/core/strconv",
   "moonbitlang/regexp",
+  "moonbitlang/x/decimal" as @decimal,
+  "tonyfettes/any" as @any,
 }

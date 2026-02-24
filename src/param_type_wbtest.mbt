@@ -196,6 +196,7 @@ test "ParamTypeEntry fields are accessible" {
     name: "color",
     type_: ParamType::Custom("color"),
     patterns: [RegexPattern("red|blue|green")],
+    transformer: Transformer::new(fn(groups) { ParamValue::CustomVal(@any.of(groups[0])) }),
   }
   assert_eq(entry.name, "color")
   assert_eq(entry.type_, ParamType::Custom("color"))
@@ -219,4 +220,36 @@ test "get returns ParamTypeEntry" {
   assert_eq(e.name, "int")
   assert_eq(e.type_, ParamType::Int)
   assert_true(e.patterns.length() > 0)
+}
+
+///|
+test "ParamValue::IntVal" {
+  let v = ParamValue::IntVal(42)
+  inspect(v, content="IntVal(42)")
+}
+
+///|
+test "ParamValue::CustomVal wraps Any" {
+  let v = ParamValue::CustomVal(@any.of("red"))
+  match v {
+    CustomVal(any) => {
+      let s : String = any.to()
+      assert_eq(s, "red")
+    }
+    _ => fail("expected CustomVal")
+  }
+}
+
+///|
+test "ParamTypeEntry with transformer" {
+  let transformer = Transformer::new(fn(groups) raise { ParamValue::IntVal(@strconv.parse_int(groups[0])) })
+  let entry : ParamTypeEntry = {
+    name: "test",
+    type_: ParamType::Int,
+    patterns: [RegexPattern("\\d+")],
+    transformer,
+  }
+  assert_eq(entry.name, "test")
+  let result = entry.transformer.call(["42"])
+  assert_eq(result, ParamValue::IntVal(42))
 }
