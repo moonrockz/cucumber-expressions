@@ -62,12 +62,17 @@ pub(all) struct Transformer {
 }
 
 ///|
-pub fn Transformer::new(f : (Array[String]) -> ParamValue raise Error) -> Transformer {
+pub fn Transformer::new(
+  f : (Array[String]) -> ParamValue raise Error,
+) -> Transformer {
   { f, }
 }
 
 ///|
-pub fn Transformer::call(self : Transformer, groups : Array[String]) -> ParamValue raise Error {
+pub fn Transformer::call(
+  self : Transformer,
+  groups : Array[String],
+) -> ParamValue raise Error {
   (self.f)(groups)
 }
 

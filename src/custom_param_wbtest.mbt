@@ -88,11 +88,9 @@ test "Custom type with transformer returns CustomVal with typed Any" {
     "color",
     ParamType::Custom("color"),
     [RegexPattern("red|green|blue")],
-    transformer=Transformer::new(
-      fn(groups) raise {
-        CustomVal(@any.of(groups[0][:].to_upper().to_string()))
-      },
-    ),
+    transformer=Transformer::new(fn(groups) raise {
+      CustomVal(@any.of(groups[0][:].to_upper().to_string()))
+    }),
   )
   let expr = Expression::parse_with_registry("I select {color}", reg)
   let result = expr.match_("I select red")

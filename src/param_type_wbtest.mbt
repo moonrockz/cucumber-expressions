@@ -196,7 +196,9 @@ test "ParamTypeEntry fields are accessible" {
     name: "color",
     type_: ParamType::Custom("color"),
     patterns: [RegexPattern("red|blue|green")],
-    transformer: Transformer::new(fn(groups) { ParamValue::CustomVal(@any.of(groups[0])) }),
+    transformer: Transformer::new(fn(groups) {
+      ParamValue::CustomVal(@any.of(groups[0]))
+    }),
   }
   assert_eq(entry.name, "color")
   assert_eq(entry.type_, ParamType::Custom("color"))
@@ -381,7 +383,10 @@ test "Registry bigdecimal transformer produces BigDecimalVal" {
   let reg = ParamTypeRegistry::default()
   let entry = reg.get("bigdecimal").unwrap()
   let result = entry.transformer.call(["99.99"])
-  assert_eq(result, ParamValue::BigDecimalVal(@decimal.Decimal::from_string("99.99").unwrap()))
+  assert_eq(
+    result,
+    ParamValue::BigDecimalVal(@decimal.Decimal::from_string("99.99").unwrap()),
+  )
 }
 
 ///|
@@ -389,12 +394,19 @@ test "Registry biginteger transformer produces BigIntegerVal" {
   let reg = ParamTypeRegistry::default()
   let entry = reg.get("biginteger").unwrap()
   let result = entry.transformer.call(["123456789012345678901234567890"])
-  assert_eq(result, ParamValue::BigIntegerVal(BigInt::from_string("123456789012345678901234567890")))
+  assert_eq(
+    result,
+    ParamValue::BigIntegerVal(
+      BigInt::from_string("123456789012345678901234567890"),
+    ),
+  )
 }
 
 ///|
 test "ParamTypeEntry with transformer" {
-  let transformer = Transformer::new(fn(groups) raise { ParamValue::IntVal(@strconv.parse_int(groups[0])) })
+  let transformer = Transformer::new(fn(groups) raise {
+    ParamValue::IntVal(@strconv.parse_int(groups[0]))
+  })
   let entry : ParamTypeEntry = {
     name: "test",
     type_: ParamType::Int,

@@ -95,9 +95,7 @@ pub fn Expression::match_(self : Expression, text : String) -> Match? {
         }
     }
     // Apply transformer to get typed value
-    let transformed = try {
-      self.transformers[i].call([raw_value])
-    } catch {
+    let transformed = self.transformers[i].call([raw_value]) catch {
       _ => ParamValue::AnonymousVal(raw_value)
     }
     params.push({ value: transformed, type_, raw: raw_value })

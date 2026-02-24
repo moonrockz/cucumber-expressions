@@ -253,7 +253,10 @@ test "spec/match: bigdecimal" {
   let expr = Expression::parse("price is {bigdecimal}")
   let result = expr.match_("price is 99.99")
   guard result is Some(m) else { fail("expected match") }
-  assert_eq(m.params[0].value, ParamValue::BigDecimalVal(@decimal.Decimal::from_string("99.99").unwrap()))
+  assert_eq(
+    m.params[0].value,
+    ParamValue::BigDecimalVal(@decimal.Decimal::from_string("99.99").unwrap()),
+  )
   assert_eq(m.params[0].raw, "99.99")
 }
 
@@ -262,7 +265,12 @@ test "spec/match: biginteger" {
   let expr = Expression::parse("count is {biginteger}")
   let result = expr.match_("count is 123456789012345678901234567890")
   guard result is Some(m) else { fail("expected match") }
-  assert_eq(m.params[0].value, ParamValue::BigIntegerVal(BigInt::from_string("123456789012345678901234567890")))
+  assert_eq(
+    m.params[0].value,
+    ParamValue::BigIntegerVal(
+      BigInt::from_string("123456789012345678901234567890"),
+    ),
+  )
   assert_eq(m.params[0].raw, "123456789012345678901234567890")
 }
 

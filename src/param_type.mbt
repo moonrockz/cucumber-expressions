@@ -44,12 +44,16 @@ pub(all) struct ParamTypeEntry {
 
 ///|
 impl Show for ParamTypeEntry with output(self, logger) {
-  logger.write_string("ParamTypeEntry { name: \{self.name}, type_: \{self.type_}, patterns: \{self.patterns} }")
+  logger.write_string(
+    "ParamTypeEntry { name: \{self.name}, type_: \{self.type_}, patterns: \{self.patterns} }",
+  )
 }
 
 ///|
 impl Eq for ParamTypeEntry with equal(self, other) -> Bool {
-  self.name == other.name && self.type_ == other.type_ && self.patterns == other.patterns
+  self.name == other.name &&
+  self.type_ == other.type_ &&
+  self.patterns == other.patterns
 }
 
 ///|
@@ -68,36 +72,71 @@ pub fn ParamTypeRegistry::new() -> ParamTypeRegistry {
 pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
   let reg = ParamTypeRegistry::new()
   // Integer types (all share the same regex patterns)
-  let int_patterns = [
-    RegexPattern("(?:-?\\d+)"),
-    RegexPattern("(?:\\d+)"),
-  ]
-  reg.register("int", ParamType::Int, int_patterns,
-    transformer=Transformer::new(fn(groups) raise { IntVal(@strconv.parse_int(groups[0])) }),
+  let int_patterns = [RegexPattern("(?:-?\\d+)"), RegexPattern("(?:\\d+)")]
+  reg.register(
+    "int",
+    ParamType::Int,
+    int_patterns,
+    transformer=Transformer::new(fn(groups) raise {
+      IntVal(@strconv.parse_int(groups[0]))
+    }),
   )
-  reg.register("long", ParamType::Long, int_patterns,
-    transformer=Transformer::new(fn(groups) raise { LongVal(@strconv.parse_int64(groups[0])) }),
+  reg.register(
+    "long",
+    ParamType::Long,
+    int_patterns,
+    transformer=Transformer::new(fn(groups) raise {
+      LongVal(@strconv.parse_int64(groups[0]))
+    }),
   )
-  reg.register("byte", ParamType::Byte, int_patterns,
-    transformer=Transformer::new(fn(groups) raise { ByteVal(@strconv.parse_int(groups[0]).to_byte()) }),
+  reg.register(
+    "byte",
+    ParamType::Byte,
+    int_patterns,
+    transformer=Transformer::new(fn(groups) raise {
+      ByteVal(@strconv.parse_int(groups[0]).to_byte())
+    }),
   )
-  reg.register("short", ParamType::Short, int_patterns,
-    transformer=Transformer::new(fn(groups) raise { ShortVal(@strconv.parse_int(groups[0])) }),
+  reg.register(
+    "short",
+    ParamType::Short,
+    int_patterns,
+    transformer=Transformer::new(fn(groups) raise {
+      ShortVal(@strconv.parse_int(groups[0]))
+    }),
   )
-  reg.register("biginteger", ParamType::BigInteger, int_patterns,
-    transformer=Transformer::new(fn(groups) { BigIntegerVal(BigInt::from_string(groups[0])) }),
+  reg.register(
+    "biginteger",
+    ParamType::BigInteger,
+    int_patterns,
+    transformer=Transformer::new(fn(groups) {
+      BigIntegerVal(BigInt::from_string(groups[0]))
+    }),
   )
   // Float types (all share the same regex pattern)
   let float_patterns = [
     RegexPattern("(?:[+-]?(?:\\d+|\\d+\\.\\d*|\\d*\\.\\d+)(?:[eE][+-]?\\d+)?)"),
   ]
-  reg.register("float", ParamType::Float, float_patterns,
-    transformer=Transformer::new(fn(groups) raise { FloatVal(@strconv.parse_double(groups[0])) }),
+  reg.register(
+    "float",
+    ParamType::Float,
+    float_patterns,
+    transformer=Transformer::new(fn(groups) raise {
+      FloatVal(@strconv.parse_double(groups[0]))
+    }),
   )
-  reg.register("double", ParamType::Double_, float_patterns,
-    transformer=Transformer::new(fn(groups) raise { DoubleVal(@strconv.parse_double(groups[0])) }),
+  reg.register(
+    "double",
+    ParamType::Double_,
+    float_patterns,
+    transformer=Transformer::new(fn(groups) raise {
+      DoubleVal(@strconv.parse_double(groups[0]))
+    }),
   )
-  reg.register("bigdecimal", ParamType::BigDecimal, float_patterns,
+  reg.register(
+    "bigdecimal",
+    ParamType::BigDecimal,
+    float_patterns,
     transformer=Transformer::new(fn(groups) raise {
       match @decimal.Decimal::from_string(groups[0]) {
         Some(d) => BigDecimalVal(d)
@@ -106,16 +145,25 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
     }),
   )
   // String and word (identity transformers)
-  reg.register("string", ParamType::String_, [
-    RegexPattern("\"([^\"\\\\]*(\\\\.[^\"\\\\]*)*)\""),
-    RegexPattern("'([^'\\\\]*(\\\\.[^'\\\\]*)*)'"),
-  ],
+  reg.register(
+    "string",
+    ParamType::String_,
+    [
+      RegexPattern("\"([^\"\\\\]*(\\\\.[^\"\\\\]*)*)\""),
+      RegexPattern("'([^'\\\\]*(\\\\.[^'\\\\]*)*)'"),
+    ],
     transformer=Transformer::new(fn(groups) { StringVal(groups[0]) }),
   )
-  reg.register("word", ParamType::Word, [RegexPattern("[^\\s]+")],
+  reg.register(
+    "word",
+    ParamType::Word,
+    [RegexPattern("[^\\s]+")],
     transformer=Transformer::new(fn(groups) { WordVal(groups[0]) }),
   )
-  reg.register("", ParamType::Anonymous, [RegexPattern(".*")],
+  reg.register(
+    "",
+    ParamType::Anonymous,
+    [RegexPattern(".*")],
     transformer=Transformer::new(fn(groups) { AnonymousVal(groups[0]) }),
   )
   reg
@@ -127,7 +175,9 @@ pub fn ParamTypeRegistry::register(
   name : String,
   type_ : ParamType,
   patterns : Array[RegexPattern],
-  transformer~ : Transformer = Transformer::new(fn(groups) { ParamValue::CustomVal(@any.of(groups[0])) }),
+  transformer? : Transformer = Transformer::new(fn(groups) {
+    ParamValue::CustomVal(@any.of(groups[0]))
+  }),
 ) -> Unit {
   self.entries.push({ name, type_, patterns, transformer })
 }
