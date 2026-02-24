@@ -84,9 +84,9 @@ test "ParamType equality" {
 }
 
 ///|
-test "ParamTypeRegistry::default has 5 built-in types" {
+test "ParamTypeRegistry::default has 11 built-in types" {
   let reg = ParamTypeRegistry::default()
-  inspect(reg.entries_view().length(), content="5")
+  inspect(reg.entries_view().length(), content="11")
 }
 
 ///|
@@ -207,7 +207,7 @@ test "ParamTypeEntry fields are accessible" {
 test "entries_view returns all registered types" {
   let reg = ParamTypeRegistry::default()
   let view = reg.entries_view()
-  assert_eq(view.length(), 5)
+  assert_eq(view.length(), 11)
   assert_eq(view[0].name, "int")
   assert_eq(view[0].type_, ParamType::Int)
 }
@@ -238,6 +238,158 @@ test "ParamValue::CustomVal wraps Any" {
     }
     _ => fail("expected CustomVal")
   }
+}
+
+///|
+test "Registry get double returns correct type and patterns" {
+  let reg = ParamTypeRegistry::default()
+  match reg.get("double") {
+    Some(entry) => {
+      assert_true(entry.type_ == ParamType::Double_)
+      inspect(entry.patterns.length(), content="1")
+    }
+    None => abort("expected double to be registered")
+  }
+}
+
+///|
+test "Registry get long returns correct type and patterns" {
+  let reg = ParamTypeRegistry::default()
+  match reg.get("long") {
+    Some(entry) => {
+      assert_true(entry.type_ == ParamType::Long)
+      inspect(entry.patterns.length(), content="2")
+    }
+    None => abort("expected long to be registered")
+  }
+}
+
+///|
+test "Registry get byte returns correct type and patterns" {
+  let reg = ParamTypeRegistry::default()
+  match reg.get("byte") {
+    Some(entry) => {
+      assert_true(entry.type_ == ParamType::Byte)
+      inspect(entry.patterns.length(), content="2")
+    }
+    None => abort("expected byte to be registered")
+  }
+}
+
+///|
+test "Registry get short returns correct type and patterns" {
+  let reg = ParamTypeRegistry::default()
+  match reg.get("short") {
+    Some(entry) => {
+      assert_true(entry.type_ == ParamType::Short)
+      inspect(entry.patterns.length(), content="2")
+    }
+    None => abort("expected short to be registered")
+  }
+}
+
+///|
+test "Registry get bigdecimal returns correct type and patterns" {
+  let reg = ParamTypeRegistry::default()
+  match reg.get("bigdecimal") {
+    Some(entry) => {
+      assert_true(entry.type_ == ParamType::BigDecimal)
+      inspect(entry.patterns.length(), content="1")
+    }
+    None => abort("expected bigdecimal to be registered")
+  }
+}
+
+///|
+test "Registry get biginteger returns correct type and patterns" {
+  let reg = ParamTypeRegistry::default()
+  match reg.get("biginteger") {
+    Some(entry) => {
+      assert_true(entry.type_ == ParamType::BigInteger)
+      inspect(entry.patterns.length(), content="2")
+    }
+    None => abort("expected biginteger to be registered")
+  }
+}
+
+///|
+test "Registry int transformer produces IntVal" {
+  let reg = ParamTypeRegistry::default()
+  let entry = reg.get("int").unwrap()
+  let result = entry.transformer.call(["42"])
+  assert_eq(result, ParamValue::IntVal(42))
+}
+
+///|
+test "Registry float transformer produces FloatVal" {
+  let reg = ParamTypeRegistry::default()
+  let entry = reg.get("float").unwrap()
+  let result = entry.transformer.call(["3.14"])
+  assert_eq(result, ParamValue::FloatVal(3.14))
+}
+
+///|
+test "Registry double transformer produces DoubleVal" {
+  let reg = ParamTypeRegistry::default()
+  let entry = reg.get("double").unwrap()
+  let result = entry.transformer.call(["3.14"])
+  assert_eq(result, ParamValue::DoubleVal(3.14))
+}
+
+///|
+test "Registry long transformer produces LongVal" {
+  let reg = ParamTypeRegistry::default()
+  let entry = reg.get("long").unwrap()
+  let result = entry.transformer.call(["9223372036854775807"])
+  assert_eq(result, ParamValue::LongVal(9223372036854775807L))
+}
+
+///|
+test "Registry byte transformer produces ByteVal" {
+  let reg = ParamTypeRegistry::default()
+  let entry = reg.get("byte").unwrap()
+  let result = entry.transformer.call(["255"])
+  assert_eq(result, ParamValue::ByteVal(b'\xFF'))
+}
+
+///|
+test "Registry short transformer produces ShortVal" {
+  let reg = ParamTypeRegistry::default()
+  let entry = reg.get("short").unwrap()
+  let result = entry.transformer.call(["8080"])
+  assert_eq(result, ParamValue::ShortVal(8080))
+}
+
+///|
+test "Registry string transformer produces StringVal" {
+  let reg = ParamTypeRegistry::default()
+  let entry = reg.get("string").unwrap()
+  let result = entry.transformer.call(["hello"])
+  assert_eq(result, ParamValue::StringVal("hello"))
+}
+
+///|
+test "Registry word transformer produces WordVal" {
+  let reg = ParamTypeRegistry::default()
+  let entry = reg.get("word").unwrap()
+  let result = entry.transformer.call(["banana"])
+  assert_eq(result, ParamValue::WordVal("banana"))
+}
+
+///|
+test "Registry bigdecimal transformer produces BigDecimalVal" {
+  let reg = ParamTypeRegistry::default()
+  let entry = reg.get("bigdecimal").unwrap()
+  let result = entry.transformer.call(["99.99"])
+  assert_eq(result, ParamValue::BigDecimalVal(@decimal.Decimal::from_string("99.99").unwrap()))
+}
+
+///|
+test "Registry biginteger transformer produces BigIntegerVal" {
+  let reg = ParamTypeRegistry::default()
+  let entry = reg.get("biginteger").unwrap()
+  let result = entry.transformer.call(["123456789012345678901234567890"])
+  assert_eq(result, ParamValue::BigIntegerVal(BigInt::from_string("123456789012345678901234567890")))
 }
 
 ///|
