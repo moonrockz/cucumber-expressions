@@ -1,0 +1,150 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonrockz/cucumber-expressions"
+
+import {
+  "moonbitlang/core/bigint",
+  "moonbitlang/core/json",
+  "moonbitlang/x/decimal",
+  "tonyfettes/any",
+}
+
+// Values
+pub fn compile(Node, ParamTypeRegistry) -> String raise ExpressionError
+
+pub fn compile_expression(String, registry? : ParamTypeRegistry) -> String raise ExpressionError
+
+pub fn parse_expression(String) -> Node raise ExpressionError
+
+pub fn tokenize(String) -> Array[Token] raise ExpressionError
+
+pub fn validate(Node) -> Unit raise ExpressionError
+
+pub fn version() -> String
+
+// Errors
+pub suberror ExpressionError {
+  UnmatchedBrace(position~ : Int, message~ : String)
+  UnmatchedParen(position~ : Int, message~ : String)
+  CannotEscape(position~ : Int, character~ : Char, message~ : String)
+  UnexpectedEscapeEnd(position~ : Int, message~ : String)
+  ValidationError(position~ : Int, message~ : String)
+  UnknownParameterType(name~ : String, message~ : String)
+}
+pub impl Show for ExpressionError
+
+// Types and methods
+pub(all) struct Expression {
+  // private fields
+}
+pub fn Expression::match_(Self, String) -> Match?
+pub fn Expression::parse(String) -> Self raise ExpressionError
+pub fn Expression::parse_with_registry(String, ParamTypeRegistry) -> Self raise ExpressionError
+pub fn Expression::source(Self) -> String
+
+pub(all) struct Match {
+  params : Array[Param]
+}
+pub impl Eq for Match
+pub impl Show for Match
+
+pub(all) enum Node {
+  TextNode(String)
+  ParameterNode(String)
+  OptionalNode(Array[Node])
+  AlternationNode(Array[Array[Node]])
+  ExpressionNode(Array[Node])
+}
+pub impl Eq for Node
+pub impl Show for Node
+pub impl ToJson for Node
+pub impl @json.FromJson for Node
+
+pub(all) struct Param {
+  value : ParamValue
+  type_ : ParamType
+  raw : String
+}
+pub impl Eq for Param
+pub impl Show for Param
+
+pub(all) enum ParamType {
+  Int
+  Float
+  String_
+  Word
+  Anonymous
+  Double_
+  Long
+  Byte
+  Short
+  BigDecimal
+  BigInteger
+  Custom(String)
+}
+pub impl Eq for ParamType
+pub impl Show for ParamType
+pub impl ToJson for ParamType
+pub impl @json.FromJson for ParamType
+
+pub(all) struct ParamTypeEntry {
+  name : String
+  type_ : ParamType
+  patterns : Array[RegexPattern]
+  transformer : Transformer
+}
+
+pub(all) struct ParamTypeRegistry {
+  // private fields
+}
+pub fn ParamTypeRegistry::default() -> Self
+pub fn ParamTypeRegistry::entries_view(Self) -> ArrayView[ParamTypeEntry]
+pub fn ParamTypeRegistry::get(Self, String) -> ParamTypeEntry?
+pub fn ParamTypeRegistry::new() -> Self
+pub fn ParamTypeRegistry::register(Self, String, ParamType, Array[RegexPattern], transformer? : Transformer) -> Unit
+
+pub(all) enum ParamValue {
+  IntVal(Int)
+  FloatVal(Double)
+  DoubleVal(Double)
+  LongVal(Int64)
+  ByteVal(Byte)
+  ShortVal(Int)
+  StringVal(String)
+  WordVal(String)
+  AnonymousVal(String)
+  BigDecimalVal(@decimal.Decimal)
+  BigIntegerVal(@bigint.BigInt)
+  CustomVal(@any.Any)
+}
+
+pub(all) struct RegexPattern {
+  // private fields
+
+  fn new(String) -> RegexPattern
+}
+pub fn RegexPattern::to_string(Self) -> String
+pub impl Eq for RegexPattern
+pub impl Show for RegexPattern
+
+pub(all) enum Token {
+  Text(String)
+  BeginParameter
+  EndParameter
+  BeginOptional
+  EndOptional
+  Alternation
+  WhiteSpace(String)
+}
+pub impl Eq for Token
+pub impl Show for Token
+
+pub(all) struct Transformer {
+  // private fields
+}
+pub fn Transformer::call(Self, Array[String]) -> ParamValue raise
+pub fn Transformer::new((Array[String]) -> ParamValue raise) -> Self
+
+// Type aliases
+
+// Traits
+
