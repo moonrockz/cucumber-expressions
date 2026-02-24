@@ -101,7 +101,7 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
     transformer=Transformer::new(fn(groups) raise {
       match @decimal.Decimal::from_string(groups[0]) {
         Some(d) => BigDecimalVal(d)
-        None => raise Failure("Invalid bigdecimal: " + groups[0])
+        None => raise Failure::Failure("Invalid bigdecimal: " + groups[0])
       }
     }),
   )

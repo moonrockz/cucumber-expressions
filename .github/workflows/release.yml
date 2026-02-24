@@ -63,7 +63,7 @@ jobs:
       - name: Pre-release checks
         run: |
           moon check
-          moon test
+          moon test --target js
 
   publish:
     needs: validate
