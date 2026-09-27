@@ -15,7 +15,7 @@ pub(all) enum Token {
   Alternation
   /// Whitespace run.
   WhiteSpace(String)
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Tokenize a cucumber expression string into an array of tokens.
@@ -24,7 +24,7 @@ pub(all) enum Token {
 /// matching braces or parentheses — that is the parser's responsibility.
 pub fn tokenize(expression : String) -> Array[Token] raise ExpressionError {
   let tokens : Array[Token] = []
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   let chars = expression.to_array()
   let len = chars.length()
   let mut i = 0
@@ -78,7 +78,7 @@ pub fn tokenize(expression : String) -> Array[Token] raise ExpressionError {
       _ =>
         if ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' {
           flush_text(tokens, buf)
-          let ws = StringBuilder::new()
+          let ws = StringBuilder()
           ws.write_char(ch)
           i = i + 1
           while i < len {
@@ -117,3 +117,11 @@ fn is_escapable(ch : Char) -> Bool {
     _ => false
   }
 }
+
+///|
+#deprecated
+pub extend Token with Eq::{not_equal, equal}
+
+///|
+#deprecated
+pub extend Token with @debug.Debug::{to_repr}

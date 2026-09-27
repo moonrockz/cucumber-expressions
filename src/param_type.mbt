@@ -2,12 +2,10 @@
 /// A regex pattern used for matching parameter types in cucumber expressions.
 pub(all) struct RegexPattern {
   priv value : String
-
-  fn new(value : String) -> RegexPattern
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
-fn RegexPattern::new(value : String) -> RegexPattern {
+pub fn RegexPattern::RegexPattern(value : String) -> RegexPattern {
   { value, }
 }
 
@@ -31,7 +29,7 @@ pub(all) enum ParamType {
   BigDecimal
   BigInteger
   Custom(String)
-} derive(Show, Eq, ToJson, FromJson)
+} derive(Debug, Eq, ToJson, FromJson)
 
 ///|
 /// A registered parameter type entry with name, type, regex patterns, and transformer.
@@ -40,17 +38,10 @@ pub(all) struct ParamTypeEntry {
   type_ : ParamType
   patterns : Array[RegexPattern]
   transformer : Transformer
-}
+} derive(Debug)
 
 ///|
-impl Show for ParamTypeEntry with output(self, logger) {
-  logger.write_string(
-    "ParamTypeEntry { name: \{self.name}, type_: \{self.type_}, patterns: \{self.patterns} }",
-  )
-}
-
-///|
-impl Eq for ParamTypeEntry with equal(self, other) -> Bool {
+pub impl Eq for ParamTypeEntry with fn equal(self, other) -> Bool {
   self.name == other.name &&
   self.type_ == other.type_ &&
   self.patterns == other.patterns
@@ -64,7 +55,7 @@ pub(all) struct ParamTypeRegistry {
 
 ///|
 pub fn ParamTypeRegistry::new() -> ParamTypeRegistry {
-  { entries: [] }
+  { entries: [], }
 }
 
 ///|
@@ -78,7 +69,7 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
     ParamType::Int,
     int_patterns,
     transformer=Transformer::new(fn(groups) raise {
-      IntVal(@strconv.parse_int(groups[0]))
+      IntVal(@string.parse_int(groups[0]))
     }),
   )
   reg.register(
@@ -86,7 +77,7 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
     ParamType::Long,
     int_patterns,
     transformer=Transformer::new(fn(groups) raise {
-      LongVal(@strconv.parse_int64(groups[0]))
+      LongVal(@string.parse_int64(groups[0]))
     }),
   )
   reg.register(
@@ -94,7 +85,7 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
     ParamType::Byte,
     int_patterns,
     transformer=Transformer::new(fn(groups) raise {
-      ByteVal(@strconv.parse_int(groups[0]).to_byte())
+      ByteVal(@string.parse_int(groups[0]).to_byte())
     }),
   )
   reg.register(
@@ -102,7 +93,7 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
     ParamType::Short,
     int_patterns,
     transformer=Transformer::new(fn(groups) raise {
-      ShortVal(@strconv.parse_int(groups[0]))
+      ShortVal(@string.parse_int(groups[0]))
     }),
   )
   reg.register(
@@ -122,7 +113,7 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
     ParamType::Float,
     float_patterns,
     transformer=Transformer::new(fn(groups) raise {
-      FloatVal(@strconv.parse_double(groups[0]))
+      FloatVal(@string.parse_double(groups[0]))
     }),
   )
   reg.register(
@@ -130,7 +121,7 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
     ParamType::Double_,
     float_patterns,
     transformer=Transformer::new(fn(groups) raise {
-      DoubleVal(@strconv.parse_double(groups[0]))
+      DoubleVal(@string.parse_double(groups[0]))
     }),
   )
   reg.register(
@@ -179,7 +170,7 @@ pub fn ParamTypeRegistry::register(
     ParamValue::CustomVal(@any.of(groups[0]))
   }),
 ) -> Unit {
-  self.entries.push({ name, type_, patterns, transformer })
+  self.entries.push({ name, type_, patterns, transformer, })
 }
 
 ///|
@@ -202,3 +193,33 @@ pub fn ParamTypeRegistry::entries_view(
 ) -> ArrayView[ParamTypeEntry] {
   self.entries[:]
 }
+
+///|
+#deprecated
+pub extend RegexPattern with Eq::{not_equal, equal}
+
+///|
+#deprecated
+pub extend RegexPattern with @debug.Debug::{to_repr}
+
+///|
+pub extend ParamType with ToJson::{to_json}
+
+///|
+pub extend ParamType with @json.FromJson::{from_json}
+
+///|
+#deprecated
+pub extend ParamType with Eq::{not_equal, equal}
+
+///|
+#deprecated
+pub extend ParamType with @debug.Debug::{to_repr}
+
+///|
+#deprecated
+pub extend ParamTypeEntry with Eq::{not_equal, equal}
+
+///|
+#deprecated
+pub extend ParamTypeEntry with @debug.Debug::{to_repr}

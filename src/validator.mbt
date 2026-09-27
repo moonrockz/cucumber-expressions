@@ -52,7 +52,7 @@ fn validate_node(
             _ => ()
           }
         }
-        if not(has_text) {
+        if !has_text {
           raise ExpressionError::ValidationError(
             position=0,
             message="Each alternation arm must contain at least one text node",

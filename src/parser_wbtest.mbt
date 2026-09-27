@@ -3,7 +3,7 @@
 ///|
 test "parse: simple text" {
   let ast = parse_expression("three blind mice")
-  inspect(
+  debug_inspect(
     ast,
     content=(
       #|ExpressionNode([TextNode("three blind mice")])
@@ -14,25 +14,28 @@ test "parse: simple text" {
 ///|
 test "parse: parameter" {
   let ast = parse_expression("{string}")
-  inspect(ast, content="ExpressionNode([ParameterNode(\"string\")])")
+  debug_inspect(ast, content="ExpressionNode([ParameterNode(\"string\")])")
 }
 
 ///|
 test "parse: optional" {
   let ast = parse_expression("(blind)")
-  inspect(ast, content="ExpressionNode([OptionalNode([TextNode(\"blind\")])])")
+  debug_inspect(
+    ast,
+    content="ExpressionNode([OptionalNode([TextNode(\"blind\")])])",
+  )
 }
 
 ///|
 test "parse: empty expression" {
   let ast = parse_expression("")
-  inspect(ast, content="ExpressionNode([])")
+  debug_inspect(ast, content="ExpressionNode([])")
 }
 
 ///|
 test "parse: anonymous parameter" {
   let ast = parse_expression("{}")
-  inspect(ast, content="ExpressionNode([ParameterNode(\"\")])")
+  debug_inspect(ast, content="ExpressionNode([ParameterNode(\"\")])")
 }
 
 // Alternation
@@ -40,7 +43,7 @@ test "parse: anonymous parameter" {
 ///|
 test "parse: alternation" {
   let ast = parse_expression("mice/rats")
-  inspect(
+  debug_inspect(
     ast,
     content="ExpressionNode([AlternationNode([[TextNode(\"mice\")], [TextNode(\"rats\")]])])",
   )
@@ -49,10 +52,16 @@ test "parse: alternation" {
 ///|
 test "parse: alternation in phrase" {
   let ast = parse_expression("three hungry/blind mice")
-  inspect(
+  debug_inspect(
     ast,
     content=(
-      #|ExpressionNode([TextNode("three "), AlternationNode([[TextNode("hungry")], [TextNode("blind")]]), TextNode(" mice")])
+      #|ExpressionNode(
+      #|  [
+      #|    TextNode("three "),
+      #|    AlternationNode([[TextNode("hungry")], [TextNode("blind")]]),
+      #|    TextNode(" mice"),
+      #|  ],
+      #|)
     ),
   )
 }
@@ -62,10 +71,16 @@ test "parse: alternation in phrase" {
 ///|
 test "parse: optional in phrase" {
   let ast = parse_expression("three (blind) mice")
-  inspect(
+  debug_inspect(
     ast,
     content=(
-      #|ExpressionNode([TextNode("three "), OptionalNode([TextNode("blind")]), TextNode(" mice")])
+      #|ExpressionNode(
+      #|  [
+      #|    TextNode("three "),
+      #|    OptionalNode([TextNode("blind")]),
+      #|    TextNode(" mice"),
+      #|  ],
+      #|)
     ),
   )
 }
@@ -73,10 +88,17 @@ test "parse: optional in phrase" {
 ///|
 test "parse: parameter with optional" {
   let ast = parse_expression("I have {int} cucumber(s)")
-  inspect(
+  debug_inspect(
     ast,
     content=(
-      #|ExpressionNode([TextNode("I have "), ParameterNode("int"), TextNode(" cucumber"), OptionalNode([TextNode("s")])])
+      #|ExpressionNode(
+      #|  [
+      #|    TextNode("I have "),
+      #|    ParameterNode("int"),
+      #|    TextNode(" cucumber"),
+      #|    OptionalNode([TextNode("s")]),
+      #|  ],
+      #|)
     ),
   )
 }
@@ -84,7 +106,7 @@ test "parse: parameter with optional" {
 ///|
 test "parse: alternation with optional" {
   let ast = parse_expression("a/b(c)")
-  inspect(
+  debug_inspect(
     ast,
     content="ExpressionNode([AlternationNode([[TextNode(\"a\")], [TextNode(\"b\"), OptionalNode([TextNode(\"c\")])]])])",
   )
@@ -117,7 +139,7 @@ test "parse: unmatched paren" {
 ///|
 test "parse: multi-way alternation" {
   let ast = parse_expression("a/b/c")
-  inspect(
+  debug_inspect(
     ast,
     content="ExpressionNode([AlternationNode([[TextNode(\"a\")], [TextNode(\"b\")], [TextNode(\"c\")]])])",
   )
@@ -152,8 +174,22 @@ test "parse: leading slash rejected" {
 ///|
 test "parse: parameter as left boundary for alternation" {
   let ast = parse_expression("{int}st/nd/rd/th")
-  inspect(
+  debug_inspect(
     ast,
-    content="ExpressionNode([ParameterNode(\"int\"), AlternationNode([[TextNode(\"st\")], [TextNode(\"nd\")], [TextNode(\"rd\")], [TextNode(\"th\")]])])",
+    content=(
+      #|ExpressionNode(
+      #|  [
+      #|    ParameterNode("int"),
+      #|    AlternationNode(
+      #|      [
+      #|        [TextNode("st")],
+      #|        [TextNode("nd")],
+      #|        [TextNode("rd")],
+      #|        [TextNode("th")],
+      #|      ],
+      #|    ),
+      #|  ],
+      #|)
+    ),
   )
 }

@@ -1,7 +1,7 @@
 ///|
 /// Escape regex metacharacters in a string.
 fn escape_regex(s : String) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for ch in s {
     if "^$[]()\\{}.|?*+".contains(ch.to_string()) {
       buf.write_char('\\')
@@ -19,7 +19,7 @@ pub fn compile(
 ) -> String raise ExpressionError {
   match node {
     ExpressionNode(children) => {
-      let buf = StringBuilder::new()
+      let buf = StringBuilder()
       buf.write_char('^')
       for child in children {
         buf.write_string(compile(child, registry))
@@ -31,7 +31,7 @@ pub fn compile(
     ParameterNode(name) =>
       match registry.get(name) {
         Some(entry) => {
-          let buf = StringBuilder::new()
+          let buf = StringBuilder()
           buf.write_char('(')
           for i, pat in entry.patterns {
             if i > 0 {
@@ -51,7 +51,7 @@ pub fn compile(
           )
       }
     OptionalNode(children) => {
-      let buf = StringBuilder::new()
+      let buf = StringBuilder()
       buf.write_string("(?:")
       for child in children {
         buf.write_string(compile(child, registry))
@@ -60,7 +60,7 @@ pub fn compile(
       buf.to_string()
     }
     AlternationNode(alternatives) => {
-      let buf = StringBuilder::new()
+      let buf = StringBuilder()
       buf.write_string("(?:")
       for i, arm in alternatives {
         if i > 0 {

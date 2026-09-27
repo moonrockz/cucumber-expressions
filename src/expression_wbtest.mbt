@@ -5,7 +5,7 @@ test "Expression: match int parameter" {
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="1")
   inspect(m.params[0].raw, content="42")
-  inspect(m.params[0].type_, content="Int")
+  debug_inspect(m.params[0].type_, content="Int")
 }
 
 ///|
@@ -15,7 +15,7 @@ test "Expression: match float parameter" {
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="1")
   inspect(m.params[0].raw, content="3.14")
-  inspect(m.params[0].type_, content="Float")
+  debug_inspect(m.params[0].type_, content="Float")
 }
 
 ///|
@@ -25,7 +25,7 @@ test "Expression: match word parameter" {
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="1")
   inspect(m.params[0].raw, content="good")
-  inspect(m.params[0].type_, content="Word")
+  debug_inspect(m.params[0].type_, content="Word")
 }
 
 ///|
@@ -35,7 +35,7 @@ test "Expression: match string parameter (double quotes)" {
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="1")
   inspect(m.params[0].raw, content="blue")
-  inspect(m.params[0].type_, content="String_")
+  debug_inspect(m.params[0].type_, content="String_")
 }
 
 ///|
@@ -45,7 +45,7 @@ test "Expression: match string parameter (single quotes)" {
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="1")
   inspect(m.params[0].raw, content="red")
-  inspect(m.params[0].type_, content="String_")
+  debug_inspect(m.params[0].type_, content="String_")
 }
 
 ///|
@@ -55,14 +55,14 @@ test "Expression: match anonymous parameter" {
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="1")
   inspect(m.params[0].raw, content="anything goes")
-  inspect(m.params[0].type_, content="Anonymous")
+  debug_inspect(m.params[0].type_, content="Anonymous")
 }
 
 ///|
 test "Expression: no match returns None" {
   let expr = Expression::parse("I have {int} cucumbers")
   let result = expr.match_("I have many cucumbers")
-  inspect(result, content="None")
+  debug_inspect(result, content="None")
 }
 
 ///|
@@ -84,7 +84,7 @@ test "Expression: alternation" {
   let result2 = expr.match_("I have a dog")
   inspect(result2 is Some(_), content="true")
   let result3 = expr.match_("I have a fish")
-  inspect(result3, content="None")
+  debug_inspect(result3, content="None")
 }
 
 ///|
@@ -94,9 +94,9 @@ test "Expression: multiple parameters" {
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="2")
   inspect(m.params[0].raw, content="London")
-  inspect(m.params[0].type_, content="String_")
+  debug_inspect(m.params[0].type_, content="String_")
   inspect(m.params[1].raw, content="Paris")
-  inspect(m.params[1].type_, content="String_")
+  debug_inspect(m.params[1].type_, content="String_")
 }
 
 ///|

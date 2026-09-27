@@ -13,7 +13,7 @@
 ///|
 test "spec/tokenizer: unicode text" {
   let tokens = tokenize("Привет мир")
-  inspect(
+  debug_inspect(
     tokens,
     content="[Text(\"Привет\"), WhiteSpace(\" \"), Text(\"мир\")]",
   )
@@ -23,19 +23,19 @@ test "spec/tokenizer: unicode text" {
 test "spec/tokenizer: multiple consecutive escaped characters" {
   // \( \) in sequence
   let tokens = tokenize("\\(\\)")
-  inspect(tokens, content="[Text(\"()\")]")
+  debug_inspect(tokens, content="[Text(\"()\")]")
 }
 
 ///|
 test "spec/tokenizer: escaped slash becomes literal text" {
   let tokens = tokenize("mice\\/rats")
-  inspect(tokens, content="[Text(\"mice/rats\")]")
+  debug_inspect(tokens, content="[Text(\"mice/rats\")]")
 }
 
 ///|
 test "spec/tokenizer: escaped brace becomes literal text" {
   let tokens = tokenize("\\{int\\}")
-  inspect(tokens, content="[Text(\"{int}\")]")
+  debug_inspect(tokens, content="[Text(\"{int}\")]")
 }
 
 // ---------------------------------------------------------------------------
@@ -45,25 +45,47 @@ test "spec/tokenizer: escaped brace becomes literal text" {
 ///|
 test "spec/parser: alternation with parameter boundary" {
   let ast = parse_expression("{int}st/nd/rd/th")
-  inspect(
+  debug_inspect(
     ast,
-    content="ExpressionNode([ParameterNode(\"int\"), AlternationNode([[TextNode(\"st\")], [TextNode(\"nd\")], [TextNode(\"rd\")], [TextNode(\"th\")]])])",
+    content=(
+      #|ExpressionNode(
+      #|  [
+      #|    ParameterNode("int"),
+      #|    AlternationNode(
+      #|      [
+      #|        [TextNode("st")],
+      #|        [TextNode("nd")],
+      #|        [TextNode("rd")],
+      #|        [TextNode("th")],
+      #|      ],
+      #|    ),
+      #|  ],
+      #|)
+    ),
   )
 }
 
 ///|
 test "spec/parser: escaped alternation becomes literal slash" {
   let ast = parse_expression("mice\\/rats")
-  inspect(ast, content="ExpressionNode([TextNode(\"mice/rats\")])")
+  debug_inspect(ast, content="ExpressionNode([TextNode(\"mice/rats\")])")
 }
 
 ///|
 test "spec/parser: multiple optionals" {
   let ast = parse_expression("three (very) (blind) mice")
-  inspect(
+  debug_inspect(
     ast,
     content=(
-      #|ExpressionNode([TextNode("three "), OptionalNode([TextNode("very")]), TextNode(" "), OptionalNode([TextNode("blind")]), TextNode(" mice")])
+      #|ExpressionNode(
+      #|  [
+      #|    TextNode("three "),
+      #|    OptionalNode([TextNode("very")]),
+      #|    TextNode(" "),
+      #|    OptionalNode([TextNode("blind")]),
+      #|    TextNode(" mice"),
+      #|  ],
+      #|)
     ),
   )
 }
@@ -146,7 +168,7 @@ test "spec/match: int" {
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="1")
   inspect(m.params[0].raw, content="42")
-  inspect(m.params[0].type_, content="Int")
+  debug_inspect(m.params[0].type_, content="Int")
 }
 
 ///|
@@ -155,7 +177,7 @@ test "spec/match: negative int" {
   let result = expr.match_("I have -5 cucumbers")
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params[0].raw, content="-5")
-  inspect(m.params[0].type_, content="Int")
+  debug_inspect(m.params[0].type_, content="Int")
 }
 
 ///|
@@ -164,7 +186,7 @@ test "spec/match: float" {
   let result = expr.match_("I have 3.14 cucumbers")
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params[0].raw, content="3.14")
-  inspect(m.params[0].type_, content="Float")
+  debug_inspect(m.params[0].type_, content="Float")
 }
 
 ///|
@@ -173,7 +195,7 @@ test "spec/match: word" {
   let result = expr.match_("a good step")
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params[0].raw, content="good")
-  inspect(m.params[0].type_, content="Word")
+  debug_inspect(m.params[0].type_, content="Word")
 }
 
 ///|
@@ -182,7 +204,7 @@ test "spec/match: double-quoted string" {
   let result = expr.match_("I select \"blue\"")
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params[0].raw, content="blue")
-  inspect(m.params[0].type_, content="String_")
+  debug_inspect(m.params[0].type_, content="String_")
 }
 
 ///|
@@ -191,7 +213,7 @@ test "spec/match: single-quoted string" {
   let result = expr.match_("I select 'red'")
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params[0].raw, content="red")
-  inspect(m.params[0].type_, content="String_")
+  debug_inspect(m.params[0].type_, content="String_")
 }
 
 ///|
@@ -200,7 +222,7 @@ test "spec/match: anonymous" {
   let result = expr.match_("anything")
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params[0].raw, content="anything")
-  inspect(m.params[0].type_, content="Anonymous")
+  debug_inspect(m.params[0].type_, content="Anonymous")
 }
 
 ///|
@@ -282,7 +304,7 @@ test "spec/match: optional present" {
   let result = expr.match_("5 cucumbers")
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params[0].raw, content="5")
-  inspect(m.params[0].type_, content="Int")
+  debug_inspect(m.params[0].type_, content="Int")
 }
 
 ///|
@@ -291,7 +313,7 @@ test "spec/match: optional absent" {
   let result = expr.match_("1 cucumber")
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params[0].raw, content="1")
-  inspect(m.params[0].type_, content="Int")
+  debug_inspect(m.params[0].type_, content="Int")
 }
 
 ///|
@@ -342,7 +364,7 @@ test "spec/match: alternation second" {
 test "spec/match: alternation no match" {
   let expr = Expression::parse("I have a cat/dog")
   let result = expr.match_("I have a fish")
-  inspect(result, content="None")
+  debug_inspect(result, content="None")
 }
 
 ///|
@@ -351,7 +373,7 @@ test "spec/match: three-way alternation" {
   inspect(expr.match_("red") is Some(_), content="true")
   inspect(expr.match_("green") is Some(_), content="true")
   inspect(expr.match_("blue") is Some(_), content="true")
-  inspect(expr.match_("yellow"), content="None")
+  debug_inspect(expr.match_("yellow"), content="None")
 }
 
 ///|
@@ -360,7 +382,7 @@ test "spec/match: alternation with optional" {
   inspect(expr.match_("a") is Some(_), content="true")
   inspect(expr.match_("b") is Some(_), content="true")
   inspect(expr.match_("bc") is Some(_), content="true")
-  inspect(expr.match_("ac"), content="None")
+  debug_inspect(expr.match_("ac"), content="None")
 }
 
 // --- Multiple parameters ---
@@ -372,9 +394,9 @@ test "spec/match: two int params" {
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="2")
   inspect(m.params[0].raw, content="3")
-  inspect(m.params[0].type_, content="Int")
+  debug_inspect(m.params[0].type_, content="Int")
   inspect(m.params[1].raw, content="5")
-  inspect(m.params[1].type_, content="Int")
+  debug_inspect(m.params[1].type_, content="Int")
 }
 
 ///|
@@ -384,9 +406,9 @@ test "spec/match: mixed param types" {
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="2")
   inspect(m.params[0].raw, content="apple")
-  inspect(m.params[0].type_, content="Word")
+  debug_inspect(m.params[0].type_, content="Word")
   inspect(m.params[1].raw, content="1.50")
-  inspect(m.params[1].type_, content="Float")
+  debug_inspect(m.params[1].type_, content="Float")
 }
 
 ///|
@@ -396,9 +418,9 @@ test "spec/match: int and string params" {
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="2")
   inspect(m.params[0].raw, content="42")
-  inspect(m.params[0].type_, content="Int")
+  debug_inspect(m.params[0].type_, content="Int")
   inspect(m.params[1].raw, content="hello")
-  inspect(m.params[1].type_, content="String_")
+  debug_inspect(m.params[1].type_, content="String_")
 }
 
 // --- Edge cases ---
@@ -415,7 +437,7 @@ test "spec/match: empty expression matches empty string" {
 test "spec/match: empty expression does not match non-empty" {
   let expr = Expression::parse("")
   let result = expr.match_("something")
-  inspect(result, content="None")
+  debug_inspect(result, content="None")
 }
 
 ///|
@@ -436,7 +458,7 @@ test "spec/match: special regex chars dot" {
 test "spec/match: dot is not regex wildcard" {
   let expr = Expression::parse("file.txt")
   let result = expr.match_("filextxt")
-  inspect(result, content="None")
+  debug_inspect(result, content="None")
 }
 
 ///|
@@ -451,7 +473,7 @@ test "spec/match: escaped slash does not alternate" {
   let expr = Expression::parse("mice\\/rats")
   // Should NOT match just "mice" since the slash is escaped (literal)
   let result = expr.match_("mice")
-  inspect(result, content="None")
+  debug_inspect(result, content="None")
 }
 
 ///|
@@ -473,14 +495,14 @@ test "spec/match: unicode expression" {
   let expr = Expression::parse("Привет, Мир(ы)!")
   inspect(expr.match_("Привет, Мир!") is Some(_), content="true")
   inspect(expr.match_("Привет, Миры!") is Some(_), content="true")
-  inspect(expr.match_("Hello, World!"), content="None")
+  debug_inspect(expr.match_("Hello, World!"), content="None")
 }
 
 ///|
 test "spec/match: only whitespace text" {
   let expr = Expression::parse("a b")
   inspect(expr.match_("a b") is Some(_), content="true")
-  inspect(expr.match_("ab"), content="None")
+  debug_inspect(expr.match_("ab"), content="None")
 }
 
 // ---------------------------------------------------------------------------

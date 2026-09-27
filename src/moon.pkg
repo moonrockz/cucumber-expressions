@@ -1,8 +1,9 @@
 import {
   "moonbitlang/core/builtin",
+  "moonbitlang/core/debug",
   "moonbitlang/core/json",
-  "moonbitlang/core/strconv",
+  "moonbitlang/core/string",
   "moonbitlang/regexp",
-  "moonbitlang/x/decimal" as @decimal,
-  "tonyfettes/any" as @any,
+  "moonbitlang/x/decimal",
+  "tonyfettes/any",
 }

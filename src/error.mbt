@@ -13,4 +13,41 @@ pub suberror ExpressionError {
   ValidationError(position~ : Int, message~ : String)
   /// Unknown parameter type name.
   UnknownParameterType(name~ : String, message~ : String)
-} derive(Show)
+} derive(Debug)
+
+///|
+pub impl Show for ExpressionError with fn output(self, logger) {
+  match self {
+    UnmatchedBrace(position~, message~) =>
+      logger.write_string(
+        "UnmatchedBrace(position=\{position}, message=\{Repr(message)})",
+      )
+    UnmatchedParen(position~, message~) =>
+      logger.write_string(
+        "UnmatchedParen(position=\{position}, message=\{Repr(message)})",
+      )
+    CannotEscape(position~, character~, message~) =>
+      logger.write_string(
+        "CannotEscape(position=\{position}, character=\{Repr(character)}, message=\{Repr(message)})",
+      )
+    UnexpectedEscapeEnd(position~, message~) =>
+      logger.write_string(
+        "UnexpectedEscapeEnd(position=\{position}, message=\{Repr(message)})",
+      )
+    ValidationError(position~, message~) =>
+      logger.write_string(
+        "ValidationError(position=\{position}, message=\{Repr(message)})",
+      )
+    UnknownParameterType(name~, message~) =>
+      logger.write_string(
+        "UnknownParameterType(name=\{Repr(name)}, message=\{Repr(message)})",
+      )
+  }
+}
+
+///|
+pub extend ExpressionError with Show::{to_string, output}
+
+///|
+#deprecated
+pub extend ExpressionError with @debug.Debug::{to_repr}

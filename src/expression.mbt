@@ -14,7 +14,7 @@ pub(all) struct Expression {
 /// A successful match result with extracted parameters.
 pub(all) struct Match {
   params : Array[Param]
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// An extracted parameter value.
@@ -22,7 +22,7 @@ pub(all) struct Param {
   value : ParamValue
   type_ : ParamType
   raw : String
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Parse a cucumber expression with the default parameter type registry.
@@ -50,7 +50,7 @@ pub fn Expression::parse_with_registry(
         message="Failed to compile regex: " + regex_str,
       )
   }
-  { source: expression, regex, param_types, transformers, group_counts }
+  { source: expression, regex, param_types, transformers, group_counts, }
 }
 
 ///|
@@ -77,10 +77,10 @@ pub fn Expression::match_(self : Expression, text : String) -> Match? {
         let outer = mr.get(group_idx)
         match outer {
           Some(sv) => {
-            let s = sv.to_string()
+            let s = sv.to_owned()
             if (s.has_prefix("\"") && s.has_suffix("\"")) ||
               (s.has_prefix("'") && s.has_suffix("'")) {
-              s.view(start_offset=1, end_offset=s.length() - 1).to_string()
+              s.view(start_offset=1, end_offset=s.length() - 1).to_owned()
             } else {
               s
             }
@@ -90,7 +90,7 @@ pub fn Expression::match_(self : Expression, text : String) -> Match? {
       }
       _ =>
         match mr.get(group_idx) {
-          Some(sv) => sv.to_string()
+          Some(sv) => sv.to_owned()
           None => ""
         }
     }
@@ -98,7 +98,7 @@ pub fn Expression::match_(self : Expression, text : String) -> Match? {
     let transformed = self.transformers[i].call([raw_value]) catch {
       _ => ParamValue::AnonymousVal(raw_value)
     }
-    params.push({ value: transformed, type_, raw: raw_value })
+    params.push({ value: transformed, type_, raw: raw_value, })
     group_idx = group_idx + num_groups
   }
   Some({ params, })
@@ -236,3 +236,19 @@ fn count_groups_in_pattern(pattern : String) -> Int {
   }
   count
 }
+
+///|
+#deprecated
+pub extend Match with Eq::{not_equal, equal}
+
+///|
+#deprecated
+pub extend Match with @debug.Debug::{to_repr}
+
+///|
+#deprecated
+pub extend Param with Eq::{not_equal, equal}
+
+///|
+#deprecated
+pub extend Param with @debug.Debug::{to_repr}
