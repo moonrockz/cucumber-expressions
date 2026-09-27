@@ -9,7 +9,7 @@ test "custom param: register and match color" {
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="1")
   inspect(m.params[0].raw, content="blue")
-  inspect(
+  debug_inspect(
     m.params[0].type_,
     content=(
       #|Custom("color")
@@ -28,7 +28,7 @@ test "custom param: register and match direction" {
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="1")
   inspect(m.params[0].raw, content="north")
-  inspect(
+  debug_inspect(
     m.params[0].type_,
     content=(
       #|Custom("direction")
@@ -60,9 +60,9 @@ test "custom param: mixed built-in and custom" {
   guard result is Some(m) else { fail("expected match") }
   inspect(m.params.length(), content="2")
   inspect(m.params[0].raw, content="5")
-  inspect(m.params[0].type_, content="Int")
+  debug_inspect(m.params[0].type_, content="Int")
   inspect(m.params[1].raw, content="red")
-  inspect(
+  debug_inspect(
     m.params[1].type_,
     content=(
       #|Custom("color")
@@ -78,7 +78,7 @@ test "custom param: no match with custom type" {
   ])
   let expr = Expression::parse_with_registry("I select {color}", reg)
   let result = expr.match_("I select purple")
-  inspect(result, content="None")
+  debug_inspect(result, content="None")
 }
 
 ///|
@@ -88,8 +88,8 @@ test "Custom type with transformer returns CustomVal with typed Any" {
     "color",
     ParamType::Custom("color"),
     [RegexPattern("red|green|blue")],
-    transformer=Transformer::new(fn(groups) raise {
-      CustomVal(@any.of(groups[0][:].to_upper().to_string()))
+    transformer=Transformer::new(fn(groups) {
+      CustomVal(@any.of(groups[0][:].to_upper().to_owned()))
     }),
   )
   let expr = Expression::parse_with_registry("I select {color}", reg)

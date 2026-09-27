@@ -22,7 +22,7 @@ fn parse_tokens(tokens : Array[Token]) -> Array[Node] raise ExpressionError {
       BeginParameter => {
         // Collect text inside { ... } into a parameter name
         i = i + 1
-        let name = StringBuilder::new()
+        let name = StringBuilder()
         let mut found_end = false
         while i < len {
           match tokens[i] {
@@ -45,7 +45,7 @@ fn parse_tokens(tokens : Array[Token]) -> Array[Node] raise ExpressionError {
             }
           }
         }
-        if not(found_end) {
+        if !found_end {
           raise ExpressionError::UnmatchedBrace(
             position=0,
             message="Missing closing brace '}'",
@@ -87,7 +87,7 @@ fn parse_tokens(tokens : Array[Token]) -> Array[Node] raise ExpressionError {
             }
           }
         }
-        if not(found_end) {
+        if !found_end {
           raise ExpressionError::UnmatchedParen(
             position=0,
             message="Missing closing parenthesis ')'",
@@ -258,7 +258,7 @@ fn is_whitespace_text(s : String) -> Bool {
 /// OptionalNode children and AlternationNode arms.
 fn merge_text_nodes(nodes : Array[Node]) -> Array[Node] {
   let result : Array[Node] = []
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for node in nodes {
     match node {
       TextNode(s) => buf.write_string(s)

@@ -18,7 +18,7 @@ pub(all) enum ParamValue {
 }
 
 ///|
-impl Show for ParamValue with output(self, logger) {
+pub impl Show for ParamValue with fn output(self, logger) {
   match self {
     IntVal(v) => logger.write_string("IntVal(\{v})")
     FloatVal(v) => logger.write_string("FloatVal(\{v})")
@@ -36,7 +36,33 @@ impl Show for ParamValue with output(self, logger) {
 }
 
 ///|
-impl Eq for ParamValue with equal(self, other) -> Bool {
+pub impl @debug.Debug for ParamValue with fn to_repr(self) {
+  match self {
+    IntVal(v) => @debug.Repr::ctor("IntVal", [(None, @debug.Repr(v))])
+    FloatVal(v) => @debug.Repr::ctor("FloatVal", [(None, @debug.Repr(v))])
+    DoubleVal(v) => @debug.Repr::ctor("DoubleVal", [(None, @debug.Repr(v))])
+    LongVal(v) => @debug.Repr::ctor("LongVal", [(None, @debug.Repr(v))])
+    ByteVal(v) => @debug.Repr::ctor("ByteVal", [(None, @debug.Repr(v))])
+    ShortVal(v) => @debug.Repr::ctor("ShortVal", [(None, @debug.Repr(v))])
+    StringVal(v) => @debug.Repr::ctor("StringVal", [(None, @debug.Repr(v))])
+    WordVal(v) => @debug.Repr::ctor("WordVal", [(None, @debug.Repr(v))])
+    AnonymousVal(v) =>
+      @debug.Repr::ctor("AnonymousVal", [(None, @debug.Repr(v))])
+    BigDecimalVal(v) =>
+      @debug.Repr::ctor("BigDecimalVal", [
+        (None, @debug.Repr::literal(v.to_string())),
+      ])
+    BigIntegerVal(v) =>
+      @debug.Repr::ctor("BigIntegerVal", [(None, @debug.Repr(v))])
+    CustomVal(any) =>
+      @debug.Repr::ctor("CustomVal", [
+        (None, @debug.Repr::literal("<\{any.type_name()}>")),
+      ])
+  }
+}
+
+///|
+pub impl Eq for ParamValue with fn equal(self, other) -> Bool {
   match (self, other) {
     (IntVal(a), IntVal(b)) => a == b
     (FloatVal(a), FloatVal(b)) => a == b
@@ -77,11 +103,21 @@ pub fn Transformer::call(
 }
 
 ///|
-impl Show for Transformer with output(_self, logger) {
-  logger.write_string("<transformer>")
+pub impl @debug.Debug for Transformer with fn to_repr(_self) {
+  @debug.Repr::literal("<transformer>")
 }
 
 ///|
-impl Eq for Transformer with equal(_self, _other) -> Bool {
-  false
-}
+pub extend ParamValue with Show::{to_string, output}
+
+///|
+#deprecated
+pub extend ParamValue with Eq::{not_equal, equal}
+
+///|
+#deprecated
+pub extend ParamValue with @debug.Debug::{to_repr}
+
+///|
+#deprecated
+pub extend Transformer with @debug.Debug::{to_repr}

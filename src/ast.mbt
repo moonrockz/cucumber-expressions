@@ -11,4 +11,18 @@ pub(all) enum Node {
   AlternationNode(Array[Array[Node]])
   /// Top-level expression node containing all children.
   ExpressionNode(Array[Node])
-} derive(Show, Eq, ToJson, FromJson)
+} derive(Debug, Eq, ToJson, FromJson)
+
+///|
+pub extend Node with ToJson::{to_json}
+
+///|
+pub extend Node with @json.FromJson::{from_json}
+
+///|
+#deprecated
+pub extend Node with Eq::{not_equal, equal}
+
+///|
+#deprecated
+pub extend Node with @debug.Debug::{to_repr}

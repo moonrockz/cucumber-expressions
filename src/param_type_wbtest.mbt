@@ -1,31 +1,31 @@
 ///|
 test "ParamType::Int Show" {
-  inspect(ParamType::Int, content="Int")
+  debug_inspect(ParamType::Int, content="Int")
 }
 
 ///|
 test "ParamType::Float Show" {
-  inspect(ParamType::Float, content="Float")
+  debug_inspect(ParamType::Float, content="Float")
 }
 
 ///|
 test "ParamType::String_ Show" {
-  inspect(ParamType::String_, content="String_")
+  debug_inspect(ParamType::String_, content="String_")
 }
 
 ///|
 test "ParamType::Word Show" {
-  inspect(ParamType::Word, content="Word")
+  debug_inspect(ParamType::Word, content="Word")
 }
 
 ///|
 test "ParamType::Anonymous Show" {
-  inspect(ParamType::Anonymous, content="Anonymous")
+  debug_inspect(ParamType::Anonymous, content="Anonymous")
 }
 
 ///|
 test "ParamType::Custom Show" {
-  inspect(
+  debug_inspect(
     ParamType::Custom("color"),
     content=(
       #|Custom("color")
@@ -35,32 +35,32 @@ test "ParamType::Custom Show" {
 
 ///|
 test "ParamType::Double_ Show" {
-  inspect(ParamType::Double_, content="Double_")
+  debug_inspect(ParamType::Double_, content="Double_")
 }
 
 ///|
 test "ParamType::Long Show" {
-  inspect(ParamType::Long, content="Long")
+  debug_inspect(ParamType::Long, content="Long")
 }
 
 ///|
 test "ParamType::Byte Show" {
-  inspect(ParamType::Byte, content="Byte")
+  debug_inspect(ParamType::Byte, content="Byte")
 }
 
 ///|
 test "ParamType::Short Show" {
-  inspect(ParamType::Short, content="Short")
+  debug_inspect(ParamType::Short, content="Short")
 }
 
 ///|
 test "ParamType::BigDecimal Show" {
-  inspect(ParamType::BigDecimal, content="BigDecimal")
+  debug_inspect(ParamType::BigDecimal, content="BigDecimal")
 }
 
 ///|
 test "ParamType::BigInteger Show" {
-  inspect(ParamType::BigInteger, content="BigInteger")
+  debug_inspect(ParamType::BigInteger, content="BigInteger")
 }
 
 ///|
@@ -156,7 +156,7 @@ test "Registry get anonymous returns correct type and patterns" {
 ///|
 test "Registry get unknown returns None" {
   let reg = ParamTypeRegistry::default()
-  inspect(reg.get("unknown"), content="None")
+  debug_inspect(reg.get("unknown"), content="None")
 }
 
 ///|
@@ -218,7 +218,7 @@ test "entries_view returns all registered types" {
 test "get returns ParamTypeEntry" {
   let reg = ParamTypeRegistry::default()
   let entry = reg.get("int")
-  guard entry is Some(e)
+  guard entry is Some(e) else { fail("expected int to be registered") }
   assert_eq(e.name, "int")
   assert_eq(e.type_, ParamType::Int)
   assert_true(e.patterns.length() > 0)
@@ -405,7 +405,7 @@ test "Registry biginteger transformer produces BigIntegerVal" {
 ///|
 test "ParamTypeEntry with transformer" {
   let transformer = Transformer::new(fn(groups) raise {
-    ParamValue::IntVal(@strconv.parse_int(groups[0]))
+    ParamValue::IntVal(@string.parse_int(groups[0]))
   })
   let entry : ParamTypeEntry = {
     name: "test",

@@ -3,6 +3,7 @@ package "moonrockz/cucumber-expressions"
 
 import {
   "moonbitlang/core/bigint",
+  "moonbitlang/core/debug",
   "moonbitlang/core/json",
   "moonbitlang/x/decimal",
   "tonyfettes/any",
@@ -29,7 +30,11 @@ pub suberror ExpressionError {
   UnexpectedEscapeEnd(position~ : Int, message~ : String)
   ValidationError(position~ : Int, message~ : String)
   UnknownParameterType(name~ : String, message~ : String)
-}
+} derive(@debug.Debug)
+pub fn ExpressionError::output(Self, &Logger) -> Unit
+#deprecated
+pub fn ExpressionError::to_repr(Self) -> @debug.Repr
+pub fn ExpressionError::to_string(Self) -> String
 pub impl Show for ExpressionError
 
 // Types and methods
@@ -43,9 +48,13 @@ pub fn Expression::source(Self) -> String
 
 pub(all) struct Match {
   params : Array[Param]
-}
-pub impl Eq for Match
-pub impl Show for Match
+} derive(Eq, @debug.Debug)
+#deprecated
+pub fn Match::equal(Self, Self) -> Bool
+#deprecated
+pub fn Match::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn Match::to_repr(Self) -> @debug.Repr
 
 pub(all) enum Node {
   TextNode(String)
@@ -53,19 +62,27 @@ pub(all) enum Node {
   OptionalNode(Array[Node])
   AlternationNode(Array[Array[Node]])
   ExpressionNode(Array[Node])
-}
-pub impl Eq for Node
-pub impl Show for Node
-pub impl ToJson for Node
-pub impl @json.FromJson for Node
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+#deprecated
+pub fn Node::equal(Self, Self) -> Bool
+pub fn Node::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+#deprecated
+pub fn Node::not_equal(Self, Self) -> Bool
+pub fn Node::to_json(Self) -> Json
+#deprecated
+pub fn Node::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Param {
   value : ParamValue
   type_ : ParamType
   raw : String
-}
-pub impl Eq for Param
-pub impl Show for Param
+} derive(Eq, @debug.Debug)
+#deprecated
+pub fn Param::equal(Self, Self) -> Bool
+#deprecated
+pub fn Param::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn Param::to_repr(Self) -> @debug.Repr
 
 pub(all) enum ParamType {
   Int
@@ -80,18 +97,29 @@ pub(all) enum ParamType {
   BigDecimal
   BigInteger
   Custom(String)
-}
-pub impl Eq for ParamType
-pub impl Show for ParamType
-pub impl ToJson for ParamType
-pub impl @json.FromJson for ParamType
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+#deprecated
+pub fn ParamType::equal(Self, Self) -> Bool
+pub fn ParamType::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+#deprecated
+pub fn ParamType::not_equal(Self, Self) -> Bool
+pub fn ParamType::to_json(Self) -> Json
+#deprecated
+pub fn ParamType::to_repr(Self) -> @debug.Repr
 
 pub(all) struct ParamTypeEntry {
   name : String
   type_ : ParamType
   patterns : Array[RegexPattern]
   transformer : Transformer
-}
+} derive(@debug.Debug)
+#deprecated
+pub fn ParamTypeEntry::equal(Self, Self) -> Bool
+#deprecated
+pub fn ParamTypeEntry::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn ParamTypeEntry::to_repr(Self) -> @debug.Repr
+pub impl Eq for ParamTypeEntry
 
 pub(all) struct ParamTypeRegistry {
   // private fields
@@ -116,15 +144,29 @@ pub(all) enum ParamValue {
   BigIntegerVal(@bigint.BigInt)
   CustomVal(@any.Any)
 }
+#deprecated
+pub fn ParamValue::equal(Self, Self) -> Bool
+#deprecated
+pub fn ParamValue::not_equal(Self, Self) -> Bool
+pub fn ParamValue::output(Self, &Logger) -> Unit
+#deprecated
+pub fn ParamValue::to_repr(Self) -> @debug.Repr
+pub fn ParamValue::to_string(Self) -> String
+pub impl Eq for ParamValue
+pub impl Show for ParamValue
+pub impl @debug.Debug for ParamValue
 
 pub(all) struct RegexPattern {
   // private fields
-
-  fn new(String) -> RegexPattern
-}
+} derive(Eq, @debug.Debug)
+pub fn RegexPattern::RegexPattern(String) -> Self
+#deprecated
+pub fn RegexPattern::equal(Self, Self) -> Bool
+#deprecated
+pub fn RegexPattern::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn RegexPattern::to_repr(Self) -> @debug.Repr
 pub fn RegexPattern::to_string(Self) -> String
-pub impl Eq for RegexPattern
-pub impl Show for RegexPattern
 
 pub(all) enum Token {
   Text(String)
@@ -134,17 +176,23 @@ pub(all) enum Token {
   EndOptional
   Alternation
   WhiteSpace(String)
-}
-pub impl Eq for Token
-pub impl Show for Token
+} derive(Eq, @debug.Debug)
+#deprecated
+pub fn Token::equal(Self, Self) -> Bool
+#deprecated
+pub fn Token::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn Token::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Transformer {
   // private fields
 }
 pub fn Transformer::call(Self, Array[String]) -> ParamValue raise
 pub fn Transformer::new((Array[String]) -> ParamValue raise) -> Self
+#deprecated
+pub fn Transformer::to_repr(Self) -> @debug.Repr
+pub impl @debug.Debug for Transformer
 
 // Type aliases
 
 // Traits
-

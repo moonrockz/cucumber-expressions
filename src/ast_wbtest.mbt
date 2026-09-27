@@ -1,25 +1,25 @@
 ///|
 test "TextNode construction and Show" {
   let node = TextNode("hello")
-  inspect(node, content="TextNode(\"hello\")")
+  debug_inspect(node, content="TextNode(\"hello\")")
 }
 
 ///|
 test "ParameterNode construction and Show" {
   let node = ParameterNode("int")
-  inspect(node, content="ParameterNode(\"int\")")
+  debug_inspect(node, content="ParameterNode(\"int\")")
 }
 
 ///|
 test "OptionalNode construction and Show" {
   let node = OptionalNode([TextNode("blind")])
-  inspect(node, content="OptionalNode([TextNode(\"blind\")])")
+  debug_inspect(node, content="OptionalNode([TextNode(\"blind\")])")
 }
 
 ///|
 test "AlternationNode construction and Show" {
   let node = AlternationNode([[TextNode("cat")], [TextNode("dog")]])
-  inspect(
+  debug_inspect(
     node,
     content="AlternationNode([[TextNode(\"cat\")], [TextNode(\"dog\")]])",
   )
@@ -32,7 +32,7 @@ test "ExpressionNode construction and Show" {
     ParameterNode("int"),
     TextNode(" cukes"),
   ])
-  inspect(
+  debug_inspect(
     node,
     content="ExpressionNode([TextNode(\"I have \"), ParameterNode(\"int\"), TextNode(\" cukes\")])",
   )

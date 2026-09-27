@@ -1,7 +1,7 @@
 ///|
 test "UnmatchedBrace construction and Show" {
   let err : ExpressionError = UnmatchedBrace(position=5, message="Expected }")
-  inspect(
+  debug_inspect(
     err,
     content=(
       #|UnmatchedBrace(position=5, message="Expected }")
@@ -28,7 +28,7 @@ test "UnmatchedBrace message field" {
 ///|
 test "UnmatchedParen construction and Show" {
   let err : ExpressionError = UnmatchedParen(position=3, message="Expected )")
-  inspect(
+  debug_inspect(
     err,
     content=(
       #|UnmatchedParen(position=3, message="Expected )")
@@ -59,7 +59,7 @@ test "CannotEscape construction and Show" {
     character='*',
     message="Cannot escape *",
   )
-  inspect(
+  debug_inspect(
     err,
     content=(
       #|CannotEscape(position=7, character='*', message="Cannot escape *")
@@ -97,7 +97,7 @@ test "UnexpectedEscapeEnd construction and Show" {
     position=10,
     message="Unexpected end of escape",
   )
-  inspect(
+  debug_inspect(
     err,
     content=(
       #|UnexpectedEscapeEnd(position=10, message="Unexpected end of escape")
@@ -128,7 +128,7 @@ test "ValidationError construction and Show" {
     position=0,
     message="Nested optionals not allowed",
   )
-  inspect(
+  debug_inspect(
     err,
     content=(
       #|ValidationError(position=0, message="Nested optionals not allowed")
@@ -159,10 +159,13 @@ test "UnknownParameterType construction and Show" {
     name="bigint",
     message="Unknown parameter type: bigint",
   )
-  inspect(
+  debug_inspect(
     err,
     content=(
-      #|UnknownParameterType(name="bigint", message="Unknown parameter type: bigint")
+      #|UnknownParameterType(
+      #|  name="bigint",
+      #|  message="Unknown parameter type: bigint",
+      #|)
     ),
   )
 }
@@ -190,4 +193,18 @@ test "UnknownParameterType message field" {
       inspect(message, content="Unknown parameter type: bigint")
     _ => abort("unexpected variant")
   }
+}
+
+///|
+test "ExpressionError Show output keeps message" {
+  let err = ExpressionError::UnknownParameterType(
+    name="bigint",
+    message="Unknown parameter type: bigint",
+  )
+  inspect(
+    err,
+    content=(
+      #|UnknownParameterType(name="bigint", message="Unknown parameter type: bigint")
+    ),
+  )
 }
