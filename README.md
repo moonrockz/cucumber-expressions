@@ -111,7 +111,7 @@ let m = expr.match_("the red ball").unwrap()
 
 ## Specification Compliance
 
-This library implements the [Cucumber Expressions specification](https://github.com/cucumber/cucumber-expressions). All 11 built-in parameter types are supported with typed transformers. The test suite includes ports of the official test cases covering tokenization, parsing, compilation, and end-to-end matching.
+This library implements the [Cucumber Expressions specification](https://github.com/cucumber/cucumber-expressions). All 11 built-in parameter types are supported with typed transformers. The conformance suite (`src/conformance_wbtest.mbt`) is generated from the official [testdata](https://github.com/cucumber/cucumber-expressions/tree/main/testdata) and covers tokenization, parsing, compilation, and end-to-end matching. Known gaps are skipped in the suite and tracked as [issues](https://github.com/moonrockz/cucumber-expressions/issues).
 
 ## Related Projects
 

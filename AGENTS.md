@@ -118,6 +118,12 @@ implementations as tests go green.
 - Use `_wbtest.mbt` files for whitebox tests (access to private internals)
 - Run `moon test --update` to refresh snapshots when behavior changes
 - Run `moon coverage analyze > uncovered.log` to check coverage
+- `src/conformance_wbtest.mbt` is generated from the reference
+  [testdata](https://github.com/cucumber/cucumber-expressions/tree/main/testdata).
+  Do not edit it. Run `mise run conformance:generate` (needs `uv`) after you
+  change `KNOWN_GAPS` or `REF_SHA` in `mise-tasks/conformance/generate`.
+- When you fix a known gap, remove its entry from `KNOWN_GAPS` and generate the
+  suite again. The test must then pass.
 
 ## Coding Convention
 
