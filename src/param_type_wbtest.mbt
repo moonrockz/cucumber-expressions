@@ -96,8 +96,18 @@ test "Registry get int returns correct type and patterns" {
     Some(entry) => {
       assert_true(entry.type_ == ParamType::Int)
       inspect(entry.patterns.length(), content="2")
-      inspect(entry.patterns[0].to_string(), content="(?:-?\\d+)")
-      inspect(entry.patterns[1].to_string(), content="(?:\\d+)")
+      inspect(
+        entry.patterns[0].to_string(),
+        content=(
+          #|-?\d+
+        ),
+      )
+      inspect(
+        entry.patterns[1].to_string(),
+        content=(
+          #|\d+
+        ),
+      )
     }
     None => abort("expected int to be registered")
   }

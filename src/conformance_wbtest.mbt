@@ -41,6 +41,21 @@ fn conformance_text(value : ParamValue) -> String? {
 }
 
 ///|
+fn conformance_node(
+  type_ : NodeType,
+  start : Int,
+  end : Int,
+  nodes : Array[Node],
+) -> Node {
+  { type_, nodes, token: "", start, end, }
+}
+
+///|
+fn conformance_text_node(token : String, start : Int, end : Int) -> Node {
+  { type_: TextNode, nodes: [], token, start, end, }
+}
+
+///|
 test "conformance/matching/allows-escaped-optional-parameter-types" {
   let expr = Expression::parse("\\({int})")
   let result = expr.match_("(3)")
@@ -77,154 +92,153 @@ test "conformance/matching/does-allow-parameter-adjacent-to-alternation" {
 }
 
 ///|
-#skip("Known gap: #7")
 test "conformance/matching/does-not-allow-alternation-in-optional" {
-  let raised = try Expression::parse("three( brown/black) mice") catch {
-    _ => true
+  let message = try Expression::parse("three( brown/black) mice") catch {
+    err => err.message()
   } noraise {
-    _ => false
+    _ => fail("expected an error")
   }
-  if !raised {
-    fail("expected an error")
-  }
+  assert_eq(
+    message, "This Cucumber Expression has a problem at column 13:\n\nthree( brown/black) mice\n            ^\nAn alternation can not be used inside an optional.\nIf you did not mean to use an alternation you can use '\\/' to escape the '/'. Otherwise rephrase your expression or consider using a regular expression instead.",
+  )
 }
 
 ///|
 test "conformance/matching/does-not-allow-alternation-with-empty-alternative-by-adjacent-left-parameter" {
-  let raised = try Expression::parse("{int}/x") catch {
-    _ => true
+  let message = try Expression::parse("{int}/x") catch {
+    err => err.message()
   } noraise {
-    _ => false
+    _ => fail("expected an error")
   }
-  if !raised {
-    fail("expected an error")
-  }
+  assert_eq(
+    message, "This Cucumber Expression has a problem at column 6:\n\n{int}/x\n     ^\nAlternative may not be empty.\nIf you did not mean to use an alternative you can use '\\/' to escape the '/'",
+  )
 }
 
 ///|
 test "conformance/matching/does-not-allow-alternation-with-empty-alternative-by-adjacent-optional" {
-  let raised = try Expression::parse("three (brown)/black mice") catch {
-    _ => true
+  let message = try Expression::parse("three (brown)/black mice") catch {
+    err => err.message()
   } noraise {
-    _ => false
+    _ => fail("expected an error")
   }
-  if !raised {
-    fail("expected an error")
-  }
+  assert_eq(
+    message, "This Cucumber Expression has a problem at column 7:\n\nthree (brown)/black mice\n      ^-----^\nAn alternative may not exclusively contain optionals.\nIf you did not mean to use an optional you can use '\\(' to escape the '('",
+  )
 }
 
 ///|
 test "conformance/matching/does-not-allow-alternation-with-empty-alternative-by-adjacent-right-parameter" {
-  let raised = try Expression::parse("x/{int}") catch {
-    _ => true
+  let message = try Expression::parse("x/{int}") catch {
+    err => err.message()
   } noraise {
-    _ => false
+    _ => fail("expected an error")
   }
-  if !raised {
-    fail("expected an error")
-  }
+  assert_eq(
+    message, "This Cucumber Expression has a problem at column 3:\n\nx/{int}\n  ^\nAlternative may not be empty.\nIf you did not mean to use an alternative you can use '\\/' to escape the '/'",
+  )
 }
 
 ///|
 test "conformance/matching/does-not-allow-alternation-with-empty-alternative" {
-  let raised = try Expression::parse("three brown//black mice") catch {
-    _ => true
+  let message = try Expression::parse("three brown//black mice") catch {
+    err => err.message()
   } noraise {
-    _ => false
+    _ => fail("expected an error")
   }
-  if !raised {
-    fail("expected an error")
-  }
+  assert_eq(
+    message, "This Cucumber Expression has a problem at column 13:\n\nthree brown//black mice\n            ^\nAlternative may not be empty.\nIf you did not mean to use an alternative you can use '\\/' to escape the '/'",
+  )
 }
 
 ///|
 test "conformance/matching/does-not-allow-empty-optional" {
-  let raised = try Expression::parse("three () mice") catch {
-    _ => true
+  let message = try Expression::parse("three () mice") catch {
+    err => err.message()
   } noraise {
-    _ => false
+    _ => fail("expected an error")
   }
-  if !raised {
-    fail("expected an error")
-  }
+  assert_eq(
+    message, "This Cucumber Expression has a problem at column 7:\n\nthree () mice\n      ^^\nAn optional must contain some text.\nIf you did not mean to use an optional you can use '\\(' to escape the '('",
+  )
 }
 
 ///|
 test "conformance/matching/does-not-allow-nested-optional" {
-  let raised = try Expression::parse("(a(b))") catch {
-    _ => true
+  let message = try Expression::parse("(a(b))") catch {
+    err => err.message()
   } noraise {
-    _ => false
+    _ => fail("expected an error")
   }
-  if !raised {
-    fail("expected an error")
-  }
+  assert_eq(
+    message, "This Cucumber Expression has a problem at column 3:\n\n(a(b))\n  ^-^\nAn optional may not contain an other optional.\nIf you did not mean to use an optional type you can use '\\(' to escape the '('. For more complicated expressions consider using a regular expression instead.",
+  )
 }
 
 ///|
 test "conformance/matching/does-not-allow-optional-parameter-types" {
-  let raised = try Expression::parse("({int})") catch {
-    _ => true
+  let message = try Expression::parse("({int})") catch {
+    err => err.message()
   } noraise {
-    _ => false
+    _ => fail("expected an error")
   }
-  if !raised {
-    fail("expected an error")
-  }
+  assert_eq(
+    message, "This Cucumber Expression has a problem at column 2:\n\n({int})\n ^---^\nAn optional may not contain a parameter type.\nIf you did not mean to use an parameter type you can use '\\{' to escape the '{'",
+  )
 }
 
 ///|
 test "conformance/matching/does-not-allow-parameter-name-with-reserved-characters" {
-  let raised = try Expression::parse("{(string)}") catch {
-    _ => true
+  let message = try Expression::parse("{(string)}") catch {
+    err => err.message()
   } noraise {
-    _ => false
+    _ => fail("expected an error")
   }
-  if !raised {
-    fail("expected an error")
-  }
+  assert_eq(
+    message, "This Cucumber Expression has a problem at column 2:\n\n{(string)}\n ^\nParameter names may not contain '{', '}', '(', ')', '\\' or '/'.\nDid you mean to use a regular expression?",
+  )
 }
 
 ///|
 test "conformance/matching/does-not-allow-unfinished-parenthesis-1" {
-  let raised = try
+  let message = try
     Expression::parse("three (exceptionally\\) {string\\} mice")
   catch {
-    _ => true
+    err => err.message()
   } noraise {
-    _ => false
+    _ => fail("expected an error")
   }
-  if !raised {
-    fail("expected an error")
-  }
+  assert_eq(
+    message, "This Cucumber Expression has a problem at column 24:\n\nthree (exceptionally\\) {string\\} mice\n                       ^\nThe '{' does not have a matching '}'.\nIf you did not intend to use a parameter you can use '\\{' to escape the a parameter",
+  )
 }
 
 ///|
 test "conformance/matching/does-not-allow-unfinished-parenthesis-2" {
-  let raised = try
+  let message = try
     Expression::parse("three (exceptionally\\) {string} mice")
   catch {
-    _ => true
+    err => err.message()
   } noraise {
-    _ => false
+    _ => fail("expected an error")
   }
-  if !raised {
-    fail("expected an error")
-  }
+  assert_eq(
+    message, "This Cucumber Expression has a problem at column 7:\n\nthree (exceptionally\\) {string} mice\n      ^\nThe '(' does not have a matching ')'.\nIf you did not intend to use optional text you can use '\\(' to escape the optional text",
+  )
 }
 
 ///|
 test "conformance/matching/does-not-allow-unfinished-parenthesis-3" {
-  let raised = try
+  let message = try
     Expression::parse("three ((exceptionally\\) strong) mice")
   catch {
-    _ => true
+    err => err.message()
   } noraise {
-    _ => false
+    _ => fail("expected an error")
   }
-  if !raised {
-    fail("expected an error")
-  }
+  assert_eq(
+    message, "This Cucumber Expression has a problem at column 7:\n\nthree ((exceptionally\\) strong) mice\n      ^\nThe '(' does not have a matching ')'.\nIf you did not intend to use optional text you can use '\\(' to escape the optional text",
+  )
 }
 
 ///|
@@ -662,14 +676,14 @@ test "conformance/matching/matches-word" {
 
 ///|
 test "conformance/matching/throws-unknown-parameter-type" {
-  let raised = try Expression::parse("{unknown}") catch {
-    _ => true
+  let message = try Expression::parse("{unknown}") catch {
+    err => err.message()
   } noraise {
-    _ => false
+    _ => fail("expected an error")
   }
-  if !raised {
-    fail("expected an error")
-  }
+  assert_eq(
+    message, "This Cucumber Expression has a problem at column 1:\n\n{unknown}\n^-------^\nUndefined parameter type 'unknown'.\nPlease register a ParameterType for 'unknown'",
+  )
 }
 
 ///|
@@ -688,7 +702,6 @@ test "conformance/transformation/empty" {
 }
 
 ///|
-#skip("Known gap: #21")
 test "conformance/transformation/escape-regex-characters" {
   assert_eq(
     compile_expression("^$[]\\(\\){}\\\\.|?*+"),
@@ -702,7 +715,6 @@ test "conformance/transformation/optional" {
 }
 
 ///|
-#skip("Known gap: #21")
 test "conformance/transformation/parameter" {
   assert_eq(compile_expression("{int}"), "^((?:-?\\d+)|(?:\\d+))$")
 }
@@ -723,11 +735,19 @@ test "conformance/transformation/unicode" {
 ///|
 test "conformance/parser/alternation-followed-by-optional" {
   let ast = parse_expression("three blind\\ rat/cat(s)")
-  let expected = ExpressionNode([
-    TextNode("three "),
-    AlternationNode([
-      [TextNode("blind rat")],
-      [TextNode("cat"), OptionalNode([TextNode("s")])],
+  let expected = conformance_node(ExpressionNode, 0, 23, [
+    conformance_text_node("three", 0, 5),
+    conformance_text_node(" ", 5, 6),
+    conformance_node(AlternationNode, 6, 23, [
+      conformance_node(AlternativeNode, 6, 16, [
+        conformance_text_node("blind rat", 6, 16),
+      ]),
+      conformance_node(AlternativeNode, 17, 23, [
+        conformance_text_node("cat", 17, 20),
+        conformance_node(OptionalNode, 20, 23, [
+          conformance_text_node("s", 21, 22),
+        ]),
+      ]),
     ]),
   ])
   if ast != expected {
@@ -738,10 +758,19 @@ test "conformance/parser/alternation-followed-by-optional" {
 ///|
 test "conformance/parser/alternation-phrase" {
   let ast = parse_expression("three hungry/blind mice")
-  let expected = ExpressionNode([
-    TextNode("three "),
-    AlternationNode([[TextNode("hungry")], [TextNode("blind")]]),
-    TextNode(" mice"),
+  let expected = conformance_node(ExpressionNode, 0, 23, [
+    conformance_text_node("three", 0, 5),
+    conformance_text_node(" ", 5, 6),
+    conformance_node(AlternationNode, 6, 18, [
+      conformance_node(AlternativeNode, 6, 12, [
+        conformance_text_node("hungry", 6, 12),
+      ]),
+      conformance_node(AlternativeNode, 13, 18, [
+        conformance_text_node("blind", 13, 18),
+      ]),
+    ]),
+    conformance_text_node(" ", 18, 19),
+    conformance_text_node("mice", 19, 23),
   ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
@@ -751,14 +780,29 @@ test "conformance/parser/alternation-phrase" {
 ///|
 test "conformance/parser/alternation-with-parameter" {
   let ast = parse_expression("I select the {int}st/nd/rd/th")
-  let expected = ExpressionNode([
-    TextNode("I select the "),
-    ParameterNode("int"),
-    AlternationNode([
-      [TextNode("st")],
-      [TextNode("nd")],
-      [TextNode("rd")],
-      [TextNode("th")],
+  let expected = conformance_node(ExpressionNode, 0, 29, [
+    conformance_text_node("I", 0, 1),
+    conformance_text_node(" ", 1, 2),
+    conformance_text_node("select", 2, 8),
+    conformance_text_node(" ", 8, 9),
+    conformance_text_node("the", 9, 12),
+    conformance_text_node(" ", 12, 13),
+    conformance_node(ParameterNode, 13, 18, [
+      conformance_text_node("int", 14, 17),
+    ]),
+    conformance_node(AlternationNode, 18, 29, [
+      conformance_node(AlternativeNode, 18, 20, [
+        conformance_text_node("st", 18, 20),
+      ]),
+      conformance_node(AlternativeNode, 21, 23, [
+        conformance_text_node("nd", 21, 23),
+      ]),
+      conformance_node(AlternativeNode, 24, 26, [
+        conformance_text_node("rd", 24, 26),
+      ]),
+      conformance_node(AlternativeNode, 27, 29, [
+        conformance_text_node("th", 27, 29),
+      ]),
     ]),
   ])
   if ast != expected {
@@ -769,9 +813,18 @@ test "conformance/parser/alternation-with-parameter" {
 ///|
 test "conformance/parser/alternation-with-unused-end-optional" {
   let ast = parse_expression("three )blind\\ mice/rats")
-  let expected = ExpressionNode([
-    TextNode("three "),
-    AlternationNode([[TextNode(")blind mice")], [TextNode("rats")]]),
+  let expected = conformance_node(ExpressionNode, 0, 23, [
+    conformance_text_node("three", 0, 5),
+    conformance_text_node(" ", 5, 6),
+    conformance_node(AlternationNode, 6, 23, [
+      conformance_node(AlternativeNode, 6, 18, [
+        conformance_text_node(")", 6, 7),
+        conformance_text_node("blind mice", 7, 18),
+      ]),
+      conformance_node(AlternativeNode, 19, 23, [
+        conformance_text_node("rats", 19, 23),
+      ]),
+    ]),
   ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
@@ -780,21 +833,28 @@ test "conformance/parser/alternation-with-unused-end-optional" {
 
 ///|
 test "conformance/parser/alternation-with-unused-start-optional" {
-  let raised = try parse_expression("three blind\\ mice/rats(") catch {
-    _ => true
+  let message = try parse_expression("three blind\\ mice/rats(") catch {
+    err => err.message()
   } noraise {
-    _ => false
+    _ => fail("expected an error")
   }
-  if !raised {
-    fail("expected an error")
-  }
+  assert_eq(
+    message, "This Cucumber Expression has a problem at column 23:\n\nthree blind\\ mice/rats(\n                      ^\nThe '(' does not have a matching ')'.\nIf you did not intend to use optional text you can use '\\(' to escape the optional text",
+  )
 }
 
 ///|
 test "conformance/parser/alternation-with-white-space" {
   let ast = parse_expression("\\ three\\ hungry/blind\\ mice\\ ")
-  let expected = ExpressionNode([
-    AlternationNode([[TextNode(" three hungry")], [TextNode("blind mice ")]]),
+  let expected = conformance_node(ExpressionNode, 0, 29, [
+    conformance_node(AlternationNode, 0, 29, [
+      conformance_node(AlternativeNode, 0, 15, [
+        conformance_text_node(" three hungry", 0, 15),
+      ]),
+      conformance_node(AlternativeNode, 16, 29, [
+        conformance_text_node("blind mice ", 16, 29),
+      ]),
+    ]),
   ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
@@ -804,8 +864,15 @@ test "conformance/parser/alternation-with-white-space" {
 ///|
 test "conformance/parser/alternation" {
   let ast = parse_expression("mice/rats")
-  let expected = ExpressionNode([
-    AlternationNode([[TextNode("mice")], [TextNode("rats")]]),
+  let expected = conformance_node(ExpressionNode, 0, 9, [
+    conformance_node(AlternationNode, 0, 9, [
+      conformance_node(AlternativeNode, 0, 4, [
+        conformance_text_node("mice", 0, 4),
+      ]),
+      conformance_node(AlternativeNode, 5, 9, [
+        conformance_text_node("rats", 5, 9),
+      ]),
+    ]),
   ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
@@ -815,7 +882,9 @@ test "conformance/parser/alternation" {
 ///|
 test "conformance/parser/anonymous-parameter" {
   let ast = parse_expression("{}")
-  let expected = ExpressionNode([ParameterNode("")])
+  let expected = conformance_node(ExpressionNode, 0, 2, [
+    conformance_node(ParameterNode, 0, 2, []),
+  ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
   }
@@ -824,7 +893,9 @@ test "conformance/parser/anonymous-parameter" {
 ///|
 test "conformance/parser/closing-brace" {
   let ast = parse_expression("}")
-  let expected = ExpressionNode([TextNode("}")])
+  let expected = conformance_node(ExpressionNode, 0, 1, [
+    conformance_text_node("}", 0, 1),
+  ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
   }
@@ -833,27 +904,38 @@ test "conformance/parser/closing-brace" {
 ///|
 test "conformance/parser/closing-parenthesis" {
   let ast = parse_expression(")")
-  let expected = ExpressionNode([TextNode(")")])
+  let expected = conformance_node(ExpressionNode, 0, 1, [
+    conformance_text_node(")", 0, 1),
+  ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
   }
 }
 
 ///|
-#skip("Known gap: #22")
 test "conformance/parser/empty-alternation" {
   let ast = parse_expression("/")
-  let expected = ExpressionNode([AlternationNode([[], []])])
+  let expected = conformance_node(ExpressionNode, 0, 1, [
+    conformance_node(AlternationNode, 0, 1, [
+      conformance_node(AlternativeNode, 0, 0, []),
+      conformance_node(AlternativeNode, 1, 1, []),
+    ]),
+  ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
   }
 }
 
 ///|
-#skip("Known gap: #22")
 test "conformance/parser/empty-alternations" {
   let ast = parse_expression("//")
-  let expected = ExpressionNode([AlternationNode([[], [], []])])
+  let expected = conformance_node(ExpressionNode, 0, 2, [
+    conformance_node(AlternationNode, 0, 2, [
+      conformance_node(AlternativeNode, 0, 0, []),
+      conformance_node(AlternativeNode, 1, 1, []),
+      conformance_node(AlternativeNode, 2, 2, []),
+    ]),
+  ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
   }
@@ -862,7 +944,7 @@ test "conformance/parser/empty-alternations" {
 ///|
 test "conformance/parser/empty-string" {
   let ast = parse_expression("")
-  let expected = ExpressionNode([])
+  let expected = conformance_node(ExpressionNode, 0, 0, [])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
   }
@@ -871,7 +953,9 @@ test "conformance/parser/empty-string" {
 ///|
 test "conformance/parser/escaped-alternation" {
   let ast = parse_expression("mice\\/rats")
-  let expected = ExpressionNode([TextNode("mice/rats")])
+  let expected = conformance_node(ExpressionNode, 0, 10, [
+    conformance_text_node("mice/rats", 0, 10),
+  ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
   }
@@ -880,7 +964,9 @@ test "conformance/parser/escaped-alternation" {
 ///|
 test "conformance/parser/escaped-backslash" {
   let ast = parse_expression("\\\\")
-  let expected = ExpressionNode([TextNode("\\")])
+  let expected = conformance_node(ExpressionNode, 0, 2, [
+    conformance_text_node("\\", 0, 2),
+  ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
   }
@@ -889,7 +975,9 @@ test "conformance/parser/escaped-backslash" {
 ///|
 test "conformance/parser/escaped-opening-parenthesis" {
   let ast = parse_expression("\\(")
-  let expected = ExpressionNode([TextNode("(")])
+  let expected = conformance_node(ExpressionNode, 0, 2, [
+    conformance_text_node("(", 0, 2),
+  ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
   }
@@ -898,10 +986,16 @@ test "conformance/parser/escaped-opening-parenthesis" {
 ///|
 test "conformance/parser/escaped-optional-followed-by-optional" {
   let ast = parse_expression("three \\((very) blind) mice")
-  let expected = ExpressionNode([
-    TextNode("three ("),
-    OptionalNode([TextNode("very")]),
-    TextNode(" blind) mice"),
+  let expected = conformance_node(ExpressionNode, 0, 26, [
+    conformance_text_node("three", 0, 5),
+    conformance_text_node(" ", 5, 6),
+    conformance_text_node("(", 6, 8),
+    conformance_node(OptionalNode, 8, 14, [conformance_text_node("very", 9, 13)]),
+    conformance_text_node(" ", 14, 15),
+    conformance_text_node("blind", 15, 20),
+    conformance_text_node(")", 20, 21),
+    conformance_text_node(" ", 21, 22),
+    conformance_text_node("mice", 22, 26),
   ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
@@ -911,7 +1005,14 @@ test "conformance/parser/escaped-optional-followed-by-optional" {
 ///|
 test "conformance/parser/escaped-optional-phrase" {
   let ast = parse_expression("three \\(blind) mice")
-  let expected = ExpressionNode([TextNode("three (blind) mice")])
+  let expected = conformance_node(ExpressionNode, 0, 19, [
+    conformance_text_node("three", 0, 5),
+    conformance_text_node(" ", 5, 6),
+    conformance_text_node("(blind", 6, 13),
+    conformance_text_node(")", 13, 14),
+    conformance_text_node(" ", 14, 15),
+    conformance_text_node("mice", 15, 19),
+  ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
   }
@@ -920,7 +1021,10 @@ test "conformance/parser/escaped-optional-phrase" {
 ///|
 test "conformance/parser/escaped-optional" {
   let ast = parse_expression("\\(blind)")
-  let expected = ExpressionNode([TextNode("(blind)")])
+  let expected = conformance_node(ExpressionNode, 0, 8, [
+    conformance_text_node("(blind", 0, 7),
+    conformance_text_node(")", 7, 8),
+  ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
   }
@@ -929,7 +1033,11 @@ test "conformance/parser/escaped-optional" {
 ///|
 test "conformance/parser/multi-byte-character" {
   let ast = parse_expression("😀 {int}")
-  let expected = ExpressionNode([TextNode("😀 "), ParameterNode("int")])
+  let expected = conformance_node(ExpressionNode, 0, 7, [
+    conformance_text_node("😀", 0, 1),
+    conformance_text_node(" ", 1, 2),
+    conformance_node(ParameterNode, 2, 7, [conformance_text_node("int", 3, 6)]),
+  ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
   }
@@ -937,36 +1045,43 @@ test "conformance/parser/multi-byte-character" {
 
 ///|
 test "conformance/parser/opening-brace" {
-  let raised = try parse_expression("{") catch {
-    _ => true
+  let message = try parse_expression("{") catch {
+    err => err.message()
   } noraise {
-    _ => false
+    _ => fail("expected an error")
   }
-  if !raised {
-    fail("expected an error")
-  }
+  assert_eq(
+    message, "This Cucumber Expression has a problem at column 1:\n\n{\n^\nThe '{' does not have a matching '}'.\nIf you did not intend to use a parameter you can use '\\{' to escape the a parameter",
+  )
 }
 
 ///|
 test "conformance/parser/opening-parenthesis" {
-  let raised = try parse_expression("(") catch {
-    _ => true
+  let message = try parse_expression("(") catch {
+    err => err.message()
   } noraise {
-    _ => false
+    _ => fail("expected an error")
   }
-  if !raised {
-    fail("expected an error")
-  }
+  assert_eq(
+    message, "This Cucumber Expression has a problem at column 1:\n\n(\n^\nThe '(' does not have a matching ')'.\nIf you did not intend to use optional text you can use '\\(' to escape the optional text",
+  )
 }
 
 ///|
-#skip("Known gap: #22")
 test "conformance/parser/optional-containing-nested-optional" {
   let ast = parse_expression("three ((very) blind) mice")
-  let expected = ExpressionNode([
-    TextNode("three "),
-    OptionalNode([OptionalNode([TextNode("very")]), TextNode(" blind")]),
-    TextNode(" mice"),
+  let expected = conformance_node(ExpressionNode, 0, 25, [
+    conformance_text_node("three", 0, 5),
+    conformance_text_node(" ", 5, 6),
+    conformance_node(OptionalNode, 6, 20, [
+      conformance_node(OptionalNode, 7, 13, [
+        conformance_text_node("very", 8, 12),
+      ]),
+      conformance_text_node(" ", 13, 14),
+      conformance_text_node("blind", 14, 19),
+    ]),
+    conformance_text_node(" ", 20, 21),
+    conformance_text_node("mice", 21, 25),
   ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
@@ -976,10 +1091,14 @@ test "conformance/parser/optional-containing-nested-optional" {
 ///|
 test "conformance/parser/optional-phrase" {
   let ast = parse_expression("three (blind) mice")
-  let expected = ExpressionNode([
-    TextNode("three "),
-    OptionalNode([TextNode("blind")]),
-    TextNode(" mice"),
+  let expected = conformance_node(ExpressionNode, 0, 18, [
+    conformance_text_node("three", 0, 5),
+    conformance_text_node(" ", 5, 6),
+    conformance_node(OptionalNode, 6, 13, [
+      conformance_text_node("blind", 7, 12),
+    ]),
+    conformance_text_node(" ", 13, 14),
+    conformance_text_node("mice", 14, 18),
   ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
@@ -989,7 +1108,9 @@ test "conformance/parser/optional-phrase" {
 ///|
 test "conformance/parser/optional" {
   let ast = parse_expression("(blind)")
-  let expected = ExpressionNode([OptionalNode([TextNode("blind")])])
+  let expected = conformance_node(ExpressionNode, 0, 7, [
+    conformance_node(OptionalNode, 0, 7, [conformance_text_node("blind", 1, 6)]),
+  ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
   }
@@ -998,7 +1119,11 @@ test "conformance/parser/optional" {
 ///|
 test "conformance/parser/parameter" {
   let ast = parse_expression("{string}")
-  let expected = ExpressionNode([ParameterNode("string")])
+  let expected = conformance_node(ExpressionNode, 0, 8, [
+    conformance_node(ParameterNode, 0, 8, [
+      conformance_text_node("string", 1, 7),
+    ]),
+  ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
   }
@@ -1007,7 +1132,13 @@ test "conformance/parser/parameter" {
 ///|
 test "conformance/parser/phrase" {
   let ast = parse_expression("three blind mice")
-  let expected = ExpressionNode([TextNode("three blind mice")])
+  let expected = conformance_node(ExpressionNode, 0, 16, [
+    conformance_text_node("three", 0, 5),
+    conformance_text_node(" ", 5, 6),
+    conformance_text_node("blind", 6, 11),
+    conformance_text_node(" ", 11, 12),
+    conformance_text_node("mice", 12, 16),
+  ])
   if ast != expected {
     fail("got " + @debug.to_string(ast))
   }
@@ -1015,27 +1146,29 @@ test "conformance/parser/phrase" {
 
 ///|
 test "conformance/parser/unfinished-parameter" {
-  let raised = try parse_expression("{string") catch {
-    _ => true
+  let message = try parse_expression("{string") catch {
+    err => err.message()
   } noraise {
-    _ => false
+    _ => fail("expected an error")
   }
-  if !raised {
-    fail("expected an error")
-  }
+  assert_eq(
+    message, "This Cucumber Expression has a problem at column 1:\n\n{string\n^\nThe '{' does not have a matching '}'.\nIf you did not intend to use a parameter you can use '\\{' to escape the a parameter",
+  )
 }
 
 ///|
 test "conformance/tokenizer/alternation-phrase" {
   let tokens = tokenize("three blind/cripple mice")
   let expected : Array[Token] = [
-    Text("three"),
-    WhiteSpace(" "),
-    Text("blind"),
-    Alternation,
-    Text("cripple"),
-    WhiteSpace(" "),
-    Text("mice"),
+    { type_: StartOfLine, text: "", start: 0, end: 0, },
+    { type_: Text, text: "three", start: 0, end: 5, },
+    { type_: WhiteSpace, text: " ", start: 5, end: 6, },
+    { type_: Text, text: "blind", start: 6, end: 11, },
+    { type_: Alternation, text: "/", start: 11, end: 12, },
+    { type_: Text, text: "cripple", start: 12, end: 19, },
+    { type_: WhiteSpace, text: " ", start: 19, end: 20, },
+    { type_: Text, text: "mice", start: 20, end: 24, },
+    { type_: EndOfLine, text: "", start: 24, end: 24, },
   ]
   if tokens != expected {
     fail("got " + @debug.to_string(tokens))
@@ -1045,7 +1178,13 @@ test "conformance/tokenizer/alternation-phrase" {
 ///|
 test "conformance/tokenizer/alternation" {
   let tokens = tokenize("blind/cripple")
-  let expected : Array[Token] = [Text("blind"), Alternation, Text("cripple")]
+  let expected : Array[Token] = [
+    { type_: StartOfLine, text: "", start: 0, end: 0, },
+    { type_: Text, text: "blind", start: 0, end: 5, },
+    { type_: Alternation, text: "/", start: 5, end: 6, },
+    { type_: Text, text: "cripple", start: 6, end: 13, },
+    { type_: EndOfLine, text: "", start: 13, end: 13, },
+  ]
   if tokens != expected {
     fail("got " + @debug.to_string(tokens))
   }
@@ -1054,7 +1193,10 @@ test "conformance/tokenizer/alternation" {
 ///|
 test "conformance/tokenizer/empty-string" {
   let tokens = tokenize("")
-  let expected : Array[Token] = []
+  let expected : Array[Token] = [
+    { type_: StartOfLine, text: "", start: 0, end: 0, },
+    { type_: EndOfLine, text: "", start: 0, end: 0, },
+  ]
   if tokens != expected {
     fail("got " + @debug.to_string(tokens))
   }
@@ -1062,23 +1204,25 @@ test "conformance/tokenizer/empty-string" {
 
 ///|
 test "conformance/tokenizer/escape-non-reserved-character" {
-  let raised = try tokenize("\\[") catch {
-    _ => true
+  let message = try tokenize("\\[") catch {
+    err => err.message()
   } noraise {
-    _ => false
+    _ => fail("expected an error")
   }
-  if !raised {
-    fail("expected an error")
-  }
+  assert_eq(
+    message, "This Cucumber Expression has a problem at column 2:\n\n\\[\n ^\nOnly the characters '{', '}', '(', ')', '\\', '/' and whitespace can be escaped.\nIf you did mean to use an '\\' you can use '\\\\' to escape it",
+  )
 }
 
 ///|
 test "conformance/tokenizer/escaped-alternation" {
   let tokens = tokenize("blind\\ and\\ famished\\/cripple mice")
   let expected : Array[Token] = [
-    Text("blind and famished/cripple"),
-    WhiteSpace(" "),
-    Text("mice"),
+    { type_: StartOfLine, text: "", start: 0, end: 0, },
+    { type_: Text, text: "blind and famished/cripple", start: 0, end: 29, },
+    { type_: WhiteSpace, text: " ", start: 29, end: 30, },
+    { type_: Text, text: "mice", start: 30, end: 34, },
+    { type_: EndOfLine, text: "", start: 34, end: 34, },
   ]
   if tokens != expected {
     fail("got " + @debug.to_string(tokens))
@@ -1088,7 +1232,13 @@ test "conformance/tokenizer/escaped-alternation" {
 ///|
 test "conformance/tokenizer/escaped-char-has-start-index-of-text-token" {
   let tokens = tokenize(" \\/ ")
-  let expected : Array[Token] = [WhiteSpace(" "), Text("/"), WhiteSpace(" ")]
+  let expected : Array[Token] = [
+    { type_: StartOfLine, text: "", start: 0, end: 0, },
+    { type_: WhiteSpace, text: " ", start: 0, end: 1, },
+    { type_: Text, text: "/", start: 1, end: 3, },
+    { type_: WhiteSpace, text: " ", start: 3, end: 4, },
+    { type_: EndOfLine, text: "", start: 4, end: 4, },
+  ]
   if tokens != expected {
     fail("got " + @debug.to_string(tokens))
   }
@@ -1096,20 +1246,24 @@ test "conformance/tokenizer/escaped-char-has-start-index-of-text-token" {
 
 ///|
 test "conformance/tokenizer/escaped-end-of-line" {
-  let raised = try tokenize("\\") catch {
-    _ => true
+  let message = try tokenize("\\") catch {
+    err => err.message()
   } noraise {
-    _ => false
+    _ => fail("expected an error")
   }
-  if !raised {
-    fail("expected an error")
-  }
+  assert_eq(
+    message, "This Cucumber Expression has a problem at column 1:\n\n\\\n^\nThe end of line can not be escaped.\nYou can use '\\\\' to escape the '\\'",
+  )
 }
 
 ///|
 test "conformance/tokenizer/escaped-optional" {
   let tokens = tokenize("\\(blind\\)")
-  let expected : Array[Token] = [Text("(blind)")]
+  let expected : Array[Token] = [
+    { type_: StartOfLine, text: "", start: 0, end: 0, },
+    { type_: Text, text: "(blind)", start: 0, end: 9, },
+    { type_: EndOfLine, text: "", start: 9, end: 9, },
+  ]
   if tokens != expected {
     fail("got " + @debug.to_string(tokens))
   }
@@ -1118,7 +1272,11 @@ test "conformance/tokenizer/escaped-optional" {
 ///|
 test "conformance/tokenizer/escaped-parameter" {
   let tokens = tokenize("\\{string\\}")
-  let expected : Array[Token] = [Text("{string}")]
+  let expected : Array[Token] = [
+    { type_: StartOfLine, text: "", start: 0, end: 0, },
+    { type_: Text, text: "{string}", start: 0, end: 10, },
+    { type_: EndOfLine, text: "", start: 10, end: 10, },
+  ]
   if tokens != expected {
     fail("got " + @debug.to_string(tokens))
   }
@@ -1127,7 +1285,11 @@ test "conformance/tokenizer/escaped-parameter" {
 ///|
 test "conformance/tokenizer/escaped-space" {
   let tokens = tokenize("\\ ")
-  let expected : Array[Token] = [Text(" ")]
+  let expected : Array[Token] = [
+    { type_: StartOfLine, text: "", start: 0, end: 0, },
+    { type_: Text, text: " ", start: 0, end: 2, },
+    { type_: EndOfLine, text: "", start: 2, end: 2, },
+  ]
   if tokens != expected {
     fail("got " + @debug.to_string(tokens))
   }
@@ -1137,11 +1299,13 @@ test "conformance/tokenizer/escaped-space" {
 test "conformance/tokenizer/mutli-byte-character" {
   let tokens = tokenize("😀 {int}")
   let expected : Array[Token] = [
-    Text("😀"),
-    WhiteSpace(" "),
-    BeginParameter,
-    Text("int"),
-    EndParameter,
+    { type_: StartOfLine, text: "", start: 0, end: 0, },
+    { type_: Text, text: "😀", start: 0, end: 1, },
+    { type_: WhiteSpace, text: " ", start: 1, end: 2, },
+    { type_: BeginParameter, text: "{", start: 2, end: 3, },
+    { type_: Text, text: "int", start: 3, end: 6, },
+    { type_: EndParameter, text: "}", start: 6, end: 7, },
+    { type_: EndOfLine, text: "", start: 7, end: 7, },
   ]
   if tokens != expected {
     fail("got " + @debug.to_string(tokens))
@@ -1152,13 +1316,15 @@ test "conformance/tokenizer/mutli-byte-character" {
 test "conformance/tokenizer/optional-phrase" {
   let tokens = tokenize("three (blind) mice")
   let expected : Array[Token] = [
-    Text("three"),
-    WhiteSpace(" "),
-    BeginOptional,
-    Text("blind"),
-    EndOptional,
-    WhiteSpace(" "),
-    Text("mice"),
+    { type_: StartOfLine, text: "", start: 0, end: 0, },
+    { type_: Text, text: "three", start: 0, end: 5, },
+    { type_: WhiteSpace, text: " ", start: 5, end: 6, },
+    { type_: BeginOptional, text: "(", start: 6, end: 7, },
+    { type_: Text, text: "blind", start: 7, end: 12, },
+    { type_: EndOptional, text: ")", start: 12, end: 13, },
+    { type_: WhiteSpace, text: " ", start: 13, end: 14, },
+    { type_: Text, text: "mice", start: 14, end: 18, },
+    { type_: EndOfLine, text: "", start: 18, end: 18, },
   ]
   if tokens != expected {
     fail("got " + @debug.to_string(tokens))
@@ -1168,7 +1334,13 @@ test "conformance/tokenizer/optional-phrase" {
 ///|
 test "conformance/tokenizer/optional" {
   let tokens = tokenize("(blind)")
-  let expected : Array[Token] = [BeginOptional, Text("blind"), EndOptional]
+  let expected : Array[Token] = [
+    { type_: StartOfLine, text: "", start: 0, end: 0, },
+    { type_: BeginOptional, text: "(", start: 0, end: 1, },
+    { type_: Text, text: "blind", start: 1, end: 6, },
+    { type_: EndOptional, text: ")", start: 6, end: 7, },
+    { type_: EndOfLine, text: "", start: 7, end: 7, },
+  ]
   if tokens != expected {
     fail("got " + @debug.to_string(tokens))
   }
@@ -1178,13 +1350,15 @@ test "conformance/tokenizer/optional" {
 test "conformance/tokenizer/parameter-phrase" {
   let tokens = tokenize("three {string} mice")
   let expected : Array[Token] = [
-    Text("three"),
-    WhiteSpace(" "),
-    BeginParameter,
-    Text("string"),
-    EndParameter,
-    WhiteSpace(" "),
-    Text("mice"),
+    { type_: StartOfLine, text: "", start: 0, end: 0, },
+    { type_: Text, text: "three", start: 0, end: 5, },
+    { type_: WhiteSpace, text: " ", start: 5, end: 6, },
+    { type_: BeginParameter, text: "{", start: 6, end: 7, },
+    { type_: Text, text: "string", start: 7, end: 13, },
+    { type_: EndParameter, text: "}", start: 13, end: 14, },
+    { type_: WhiteSpace, text: " ", start: 14, end: 15, },
+    { type_: Text, text: "mice", start: 15, end: 19, },
+    { type_: EndOfLine, text: "", start: 19, end: 19, },
   ]
   if tokens != expected {
     fail("got " + @debug.to_string(tokens))
@@ -1194,7 +1368,13 @@ test "conformance/tokenizer/parameter-phrase" {
 ///|
 test "conformance/tokenizer/parameter" {
   let tokens = tokenize("{string}")
-  let expected : Array[Token] = [BeginParameter, Text("string"), EndParameter]
+  let expected : Array[Token] = [
+    { type_: StartOfLine, text: "", start: 0, end: 0, },
+    { type_: BeginParameter, text: "{", start: 0, end: 1, },
+    { type_: Text, text: "string", start: 1, end: 7, },
+    { type_: EndParameter, text: "}", start: 7, end: 8, },
+    { type_: EndOfLine, text: "", start: 8, end: 8, },
+  ]
   if tokens != expected {
     fail("got " + @debug.to_string(tokens))
   }
@@ -1204,11 +1384,13 @@ test "conformance/tokenizer/parameter" {
 test "conformance/tokenizer/phrase" {
   let tokens = tokenize("three blind mice")
   let expected : Array[Token] = [
-    Text("three"),
-    WhiteSpace(" "),
-    Text("blind"),
-    WhiteSpace(" "),
-    Text("mice"),
+    { type_: StartOfLine, text: "", start: 0, end: 0, },
+    { type_: Text, text: "three", start: 0, end: 5, },
+    { type_: WhiteSpace, text: " ", start: 5, end: 6, },
+    { type_: Text, text: "blind", start: 6, end: 11, },
+    { type_: WhiteSpace, text: " ", start: 11, end: 12, },
+    { type_: Text, text: "mice", start: 12, end: 16, },
+    { type_: EndOfLine, text: "", start: 16, end: 16, },
   ]
   if tokens != expected {
     fail("got " + @debug.to_string(tokens))

@@ -20,11 +20,10 @@ any MoonBit project, not coupled to any particular test framework.
 ```
 moonrockz/cucumber-expressions
 ├── src/                  # The library (sole artifact)
-│   ├── ast.mbt           # AST node types (ExpressionNode, TextNode, etc.)
-│   ├── tokenizer.mbt     # Expression string → Token array
-│   ├── parser.mbt        # Tokens → AST (three-phase: group, alternation, merge)
-│   ├── validator.mbt     # AST constraint validation
-│   ├── compiler.mbt      # AST → regex string
+│   ├── ast.mbt           # AST: Node and NodeType, with source positions
+│   ├── tokenizer.mbt     # Expression string → Token array (with positions)
+│   ├── parser.mbt        # Tokens → AST (port of the reference parser)
+│   ├── compiler.mbt      # AST → regex string, with structure checks
 │   ├── expression.mbt    # Public API: Expression, Match, Param
 │   ├── param_type.mbt    # ParamType enum + ParamTypeRegistry
 │   ├── error.mbt         # ExpressionError suberror types
@@ -42,8 +41,7 @@ moonrockz/cucumber-expressions
 ```
 Expression string → tokenize() → Token[]
                   → parse_expression() → AST (Node)
-                  → validate() → validated AST
-                  → compile() → regex string
+                  → compile_expression() → regex string (checks the AST structure)
                   → @regexp.compile() → Regexp
                   → Expression::match_() → Match?
 ```

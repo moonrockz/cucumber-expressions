@@ -10,15 +10,11 @@ import {
 }
 
 // Values
-pub fn compile(Node, ParamTypeRegistry) -> String raise ExpressionError
-
 pub fn compile_expression(String, registry? : ParamTypeRegistry) -> String raise ExpressionError
 
 pub fn parse_expression(String) -> Node raise ExpressionError
 
 pub fn tokenize(String) -> Array[Token] raise ExpressionError
-
-pub fn validate(Node) -> Unit raise ExpressionError
 
 pub fn version() -> String
 
@@ -29,9 +25,11 @@ pub suberror ExpressionError {
   CannotEscape(position~ : Int, character~ : Char, message~ : String)
   UnexpectedEscapeEnd(position~ : Int, message~ : String)
   ValidationError(position~ : Int, message~ : String)
-  UnknownParameterType(name~ : String, message~ : String)
+  UnknownParameterType(name~ : String, position~ : Int, message~ : String)
 } derive(@debug.Debug)
+pub fn ExpressionError::message(Self) -> String
 pub fn ExpressionError::output(Self, &Logger) -> Unit
+pub fn ExpressionError::position(Self) -> Int
 #deprecated
 pub fn ExpressionError::to_repr(Self) -> @debug.Repr
 pub fn ExpressionError::to_string(Self) -> String
@@ -56,21 +54,39 @@ pub fn Match::not_equal(Self, Self) -> Bool
 #deprecated
 pub fn Match::to_repr(Self) -> @debug.Repr
 
-pub(all) enum Node {
-  TextNode(String)
-  ParameterNode(String)
-  OptionalNode(Array[Node])
-  AlternationNode(Array[Array[Node]])
-  ExpressionNode(Array[Node])
+pub(all) struct Node {
+  type_ : NodeType
+  nodes : Array[Node]
+  token : String
+  start : Int
+  end : Int
 } derive(Eq, ToJson, @debug.Debug, @json.FromJson)
 #deprecated
 pub fn Node::equal(Self, Self) -> Bool
 pub fn Node::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
 #deprecated
 pub fn Node::not_equal(Self, Self) -> Bool
+pub fn Node::text(Self) -> String
 pub fn Node::to_json(Self) -> Json
 #deprecated
 pub fn Node::to_repr(Self) -> @debug.Repr
+
+pub(all) enum NodeType {
+  TextNode
+  OptionalNode
+  AlternationNode
+  AlternativeNode
+  ParameterNode
+  ExpressionNode
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+#deprecated
+pub fn NodeType::equal(Self, Self) -> Bool
+pub fn NodeType::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+#deprecated
+pub fn NodeType::not_equal(Self, Self) -> Bool
+pub fn NodeType::to_json(Self) -> Json
+#deprecated
+pub fn NodeType::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Param {
   value : ParamValue
@@ -168,21 +184,40 @@ pub fn RegexPattern::not_equal(Self, Self) -> Bool
 pub fn RegexPattern::to_repr(Self) -> @debug.Repr
 pub fn RegexPattern::to_string(Self) -> String
 
-pub(all) enum Token {
-  Text(String)
-  BeginParameter
-  EndParameter
-  BeginOptional
-  EndOptional
-  Alternation
-  WhiteSpace(String)
-} derive(Eq, @debug.Debug)
+pub(all) struct Token {
+  type_ : TokenType
+  text : String
+  start : Int
+  end : Int
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
 #deprecated
 pub fn Token::equal(Self, Self) -> Bool
+pub fn Token::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
 #deprecated
 pub fn Token::not_equal(Self, Self) -> Bool
+pub fn Token::to_json(Self) -> Json
 #deprecated
 pub fn Token::to_repr(Self) -> @debug.Repr
+
+pub(all) enum TokenType {
+  StartOfLine
+  EndOfLine
+  WhiteSpace
+  BeginOptional
+  EndOptional
+  BeginParameter
+  EndParameter
+  Alternation
+  Text
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+#deprecated
+pub fn TokenType::equal(Self, Self) -> Bool
+pub fn TokenType::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+#deprecated
+pub fn TokenType::not_equal(Self, Self) -> Bool
+pub fn TokenType::to_json(Self) -> Json
+#deprecated
+pub fn TokenType::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Transformer {
   // private fields

@@ -63,7 +63,7 @@ pub fn ParamTypeRegistry::new() -> ParamTypeRegistry {
 pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
   let reg = ParamTypeRegistry::new()
   // Integer types (all share the same regex patterns)
-  let int_patterns = [RegexPattern("(?:-?\\d+)"), RegexPattern("(?:\\d+)")]
+  let int_patterns = [RegexPattern("-?\\d+"), RegexPattern("\\d+")]
   reg.register(
     "int",
     ParamType::Int,
@@ -106,7 +106,7 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
   )
   // Float types (all share the same regex pattern)
   let float_patterns = [
-    RegexPattern("(?:[+-]?(?:\\d+|\\d+\\.\\d*|\\d*\\.\\d+)(?:[eE][+-]?\\d+)?)"),
+    RegexPattern("[+-]?(?:\\d+|\\d+\\.\\d*|\\d*\\.\\d+)(?:[eE][+-]?\\d+)?"),
   ]
   reg.register(
     "float",

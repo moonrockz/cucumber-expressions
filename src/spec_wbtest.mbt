@@ -7,155 +7,6 @@
 // =============================================================================
 
 // ---------------------------------------------------------------------------
-// 1. Tokenizer — additional coverage
-// ---------------------------------------------------------------------------
-
-///|
-test "spec/tokenizer: unicode text" {
-  let tokens = tokenize("Привет мир")
-  debug_inspect(
-    tokens,
-    content="[Text(\"Привет\"), WhiteSpace(\" \"), Text(\"мир\")]",
-  )
-}
-
-///|
-test "spec/tokenizer: multiple consecutive escaped characters" {
-  // \( \) in sequence
-  let tokens = tokenize("\\(\\)")
-  debug_inspect(tokens, content="[Text(\"()\")]")
-}
-
-///|
-test "spec/tokenizer: escaped slash becomes literal text" {
-  let tokens = tokenize("mice\\/rats")
-  debug_inspect(tokens, content="[Text(\"mice/rats\")]")
-}
-
-///|
-test "spec/tokenizer: escaped brace becomes literal text" {
-  let tokens = tokenize("\\{int\\}")
-  debug_inspect(tokens, content="[Text(\"{int}\")]")
-}
-
-// ---------------------------------------------------------------------------
-// 2. Parser — additional coverage
-// ---------------------------------------------------------------------------
-
-///|
-test "spec/parser: alternation with parameter boundary" {
-  let ast = parse_expression("{int}st/nd/rd/th")
-  debug_inspect(
-    ast,
-    content=(
-      #|ExpressionNode(
-      #|  [
-      #|    ParameterNode("int"),
-      #|    AlternationNode(
-      #|      [
-      #|        [TextNode("st")],
-      #|        [TextNode("nd")],
-      #|        [TextNode("rd")],
-      #|        [TextNode("th")],
-      #|      ],
-      #|    ),
-      #|  ],
-      #|)
-    ),
-  )
-}
-
-///|
-test "spec/parser: escaped alternation becomes literal slash" {
-  let ast = parse_expression("mice\\/rats")
-  debug_inspect(ast, content="ExpressionNode([TextNode(\"mice/rats\")])")
-}
-
-///|
-test "spec/parser: multiple optionals" {
-  let ast = parse_expression("three (very) (blind) mice")
-  debug_inspect(
-    ast,
-    content=(
-      #|ExpressionNode(
-      #|  [
-      #|    TextNode("three "),
-      #|    OptionalNode([TextNode("very")]),
-      #|    TextNode(" "),
-      #|    OptionalNode([TextNode("blind")]),
-      #|    TextNode(" mice"),
-      #|  ],
-      #|)
-    ),
-  )
-}
-
-// ---------------------------------------------------------------------------
-// 3. Transformation (AST to Regex)
-// ---------------------------------------------------------------------------
-
-///|
-test "spec/compile: empty expression" {
-  inspect(compile_expression(""), content="^$")
-}
-
-///|
-test "spec/compile: single char" {
-  inspect(compile_expression("a"), content="^a$")
-}
-
-///|
-test "spec/compile: optional" {
-  inspect(compile_expression("(a)"), content="^(?:a)?$")
-}
-
-///|
-test "spec/compile: alternation with spaces" {
-  inspect(compile_expression("a/b c/d/e"), content="^(?:a|b) (?:c|d|e)$")
-}
-
-///|
-test "spec/compile: alternation with optional" {
-  inspect(compile_expression("a/b(c)"), content="^(?:a|b(?:c)?)$")
-}
-
-///|
-test "spec/compile: unicode with optional" {
-  inspect(
-    compile_expression("Привет, Мир(ы)!"),
-    content="^Привет, Мир(?:ы)?!$",
-  )
-}
-
-///|
-test "spec/compile: escaped slash becomes literal" {
-  inspect(compile_expression("mice\\/rats"), content="^mice/rats$")
-}
-
-///|
-test "spec/compile: multiple optionals" {
-  inspect(
-    compile_expression("three (very) (blind) mice"),
-    content="^three (?:very)? (?:blind)? mice$",
-  )
-}
-
-///|
-test "spec/compile: dollar sign is escaped" {
-  inspect(compile_expression("I have $100"), content="^I have \\$100$")
-}
-
-///|
-test "spec/compile: dot is escaped" {
-  inspect(compile_expression("file.txt"), content="^file\\.txt$")
-}
-
-///|
-test "spec/compile: parentheses escaped" {
-  inspect(compile_expression("\\(text\\)"), content="^\\(text\\)$")
-}
-
-// ---------------------------------------------------------------------------
 // 4. End-to-End Matching (MOST IMPORTANT)
 // ---------------------------------------------------------------------------
 
@@ -597,4 +448,65 @@ test "spec/error: parameter inside optional" {
     _ => ()
   }
   inspect(caught, content="true")
+}
+
+// ---------------------------------------------------------------------------
+// 6. Behavior outside the reference testdata
+// ---------------------------------------------------------------------------
+
+///|
+test "spec/tokenizer: only a space is white space" {
+  let types = tokenize("a\tb c").map(t => t.type_)
+  debug_inspect(
+    types,
+    content="[StartOfLine, Text, WhiteSpace, Text, EndOfLine]",
+  )
+}
+
+///|
+test "spec/compile: tab does not end an alternation" {
+  inspect(compile_expression("a\tb/c"), content="^(?:a\tb|c)$")
+}
+
+///|
+test "spec/parser: Node::text joins the text of child nodes" {
+  let ast = parse_expression("{int} (s)")
+  inspect(ast.nodes[0].text(), content="int")
+  inspect(ast.nodes[2].text(), content="s")
+}
+
+///|
+test "spec/error: position and message of a structure error" {
+  let err = try compile_expression("(a(b))") catch {
+    e => e
+  } noraise {
+    _ => fail("expected an error")
+  }
+  inspect(err.position(), content="2")
+  inspect(err.to_string() == err.message(), content="true")
+  inspect(
+    err.message(),
+    content=(
+      #|This Cucumber Expression has a problem at column 3:
+      #|
+      #|(a(b))
+      #|  ^-^
+      #|An optional may not contain an other optional.
+      #|If you did not mean to use an optional type you can use '\(' to escape the '('. For more complicated expressions consider using a regular expression instead.
+    ),
+  )
+}
+
+///|
+test "spec/error: unknown parameter type has name and position" {
+  let err = try Expression::parse("a {color}") catch {
+    e => e
+  } noraise {
+    _ => fail("expected an error")
+  }
+  guard err is UnknownParameterType(name~, position~, ..) else {
+    fail("wrong error")
+  }
+  inspect(name, content="color")
+  inspect(position, content="2")
 }

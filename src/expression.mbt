@@ -39,10 +39,13 @@ pub fn Expression::parse_with_registry(
   registry : ParamTypeRegistry,
 ) -> Expression raise ExpressionError {
   let ast = parse_expression(expression)
-  let param_types = collect_param_types(ast, registry)
-  let transformers = collect_transformers(ast, registry)
-  let group_counts = collect_group_counts(ast, registry)
-  let regex_str = compile(ast, registry)
+  let compiled = compile_ast(expression, ast, registry)
+  let regex_str = compiled.regex
+  let param_types = compiled.parameter_types.map(e => e.type_)
+  let transformers = compiled.parameter_types.map(e => e.transformer)
+  let group_counts = compiled.parameter_types.map(e => {
+    count_capture_groups(e.patterns)
+  })
   let regex = @regexp.compile(regex_str.view()) catch {
     _ =>
       raise ExpressionError::ValidationError(
@@ -102,99 +105,6 @@ pub fn Expression::match_(self : Expression, text : String) -> Match? {
     group_idx = group_idx + num_groups
   }
   Some({ params, })
-}
-
-///|
-/// Collect parameter types from AST nodes in order.
-fn collect_param_types(
-  node : Node,
-  registry : ParamTypeRegistry,
-) -> Array[ParamType] {
-  let types : Array[ParamType] = []
-  fn walk(n : Node) {
-    match n {
-      ParameterNode(name) =>
-        match registry.get(name) {
-          Some(entry) => types.push(entry.type_)
-          None => () // error already caught during compile
-        }
-      ExpressionNode(children) | OptionalNode(children) =>
-        for child in children {
-          walk(child)
-        }
-      AlternationNode(arms) =>
-        for arm in arms {
-          for node in arm {
-            walk(node)
-          }
-        }
-      TextNode(_) => ()
-    }
-  }
-  walk(node)
-  types
-}
-
-///|
-/// Collect transformers from AST nodes in order.
-fn collect_transformers(
-  node : Node,
-  registry : ParamTypeRegistry,
-) -> Array[Transformer] {
-  let transformers : Array[Transformer] = []
-  fn walk(n : Node) {
-    match n {
-      ParameterNode(name) =>
-        match registry.get(name) {
-          Some(entry) => transformers.push(entry.transformer)
-          None => ()
-        }
-      ExpressionNode(children) | OptionalNode(children) =>
-        for child in children {
-          walk(child)
-        }
-      AlternationNode(arms) =>
-        for arm in arms {
-          for node in arm {
-            walk(node)
-          }
-        }
-      TextNode(_) => ()
-    }
-  }
-  walk(node)
-  transformers
-}
-
-///|
-/// Count the number of capture groups each parameter's regex pattern produces.
-fn collect_group_counts(
-  node : Node,
-  registry : ParamTypeRegistry,
-) -> Array[Int] {
-  let counts : Array[Int] = []
-  fn walk(n : Node) {
-    match n {
-      ParameterNode(name) =>
-        match registry.get(name) {
-          Some(entry) => counts.push(count_capture_groups(entry.patterns))
-          None => counts.push(1)
-        }
-      ExpressionNode(children) | OptionalNode(children) =>
-        for child in children {
-          walk(child)
-        }
-      AlternationNode(arms) =>
-        for arm in arms {
-          for node in arm {
-            walk(node)
-          }
-        }
-      TextNode(_) => ()
-    }
-  }
-  walk(node)
-  counts
 }
 
 ///|

@@ -1,305 +1,307 @@
+// A port of the reference CucumberExpressionParser.
+//
+// Grammar:
+//   cucumber-expression := ( alternation | optional | parameter | text )*
+//   alternation := (?<=left-boundary) + alternative* + ( '/' + alternative* )+ + (?=right-boundary)
+//   left-boundary := whitespace | } | ^
+//   right-boundary := whitespace | { | $
+//   alternative := optional | parameter | text
+//   optional := '(' + option* + ')'
+//   option := optional | parameter | text
+//   parameter := '{' + name* + '}'
+//   name := whitespace | .
+//   text := whitespace | ')' | '}' | .
+
 ///|
-/// Parse a cucumber expression string into an AST.
+/// The kinds of sub-parser. Each one maps to a rule of the grammar.
+priv enum Rule {
+  TextRule
+  NameRule
+  ParameterRule
+  OptionalRule
+  AlternativeSeparatorRule
+  AlternationRule
+}
+
+///|
+priv struct ParseResult {
+  consumed : Int
+  ast : Array[Node]
+}
+
+///|
+priv struct Parser {
+  expression : String
+  tokens : Array[Token]
+}
+
+///|
+/// Parse a cucumber expression into an AST.
+///
+/// This checks only the syntax. `compile_expression` and `Expression::parse`
+/// also check the structure, for example that an optional is not empty.
 pub fn parse_expression(expression : String) -> Node raise ExpressionError {
   let tokens = tokenize(expression)
-  let nodes = parse_tokens(tokens)
-  let nodes = split_alternations(nodes)
-  let nodes = merge_text_nodes(nodes)
-  let ast = ExpressionNode(nodes)
-  validate(ast)
-  ast
+  let parser = { expression, tokens, }
+  let result = parser.parse_between(
+    ExpressionNode,
+    StartOfLine,
+    EndOfLine,
+    [AlternationRule, OptionalRule, ParameterRule, TextRule],
+    0,
+  )
+  result.ast[0]
 }
 
 ///|
-/// First pass: convert token stream into AST nodes, handling parameters and
-/// optionals (which require matching delimiters).
-fn parse_tokens(tokens : Array[Token]) -> Array[Node] raise ExpressionError {
-  let result : Array[Node] = []
-  let len = tokens.length()
-  let mut i = 0
-  while i < len {
-    match tokens[i] {
-      BeginParameter => {
-        // Collect text inside { ... } into a parameter name
-        i = i + 1
-        let name = StringBuilder()
-        let mut found_end = false
-        while i < len {
-          match tokens[i] {
-            EndParameter => {
-              found_end = true
-              i = i + 1
-              break
-            }
-            Text(s) => {
-              name.write_string(s)
-              i = i + 1
-            }
-            WhiteSpace(s) => {
-              name.write_string(s)
-              i = i + 1
-            }
-            _ => {
-              name.write_string(to_text(tokens[i]))
-              i = i + 1
-            }
-          }
-        }
-        if !found_end {
-          raise ExpressionError::UnmatchedBrace(
-            position=0,
-            message="Missing closing brace '}'",
-          )
-        }
-        result.push(ParameterNode(name.to_string()))
-      }
-      EndParameter => {
-        // Stray end parameter — treat as text
-        result.push(TextNode("}"))
-        i = i + 1
-      }
-      BeginOptional => {
-        // Collect tokens inside ( ... ) and parse them recursively
-        i = i + 1
-        let inner_tokens : Array[Token] = []
-        let mut depth = 1
-        let mut found_end = false
-        while i < len {
-          match tokens[i] {
-            BeginOptional => {
-              depth = depth + 1
-              inner_tokens.push(tokens[i])
-              i = i + 1
-            }
-            EndOptional => {
-              depth = depth - 1
-              if depth == 0 {
-                found_end = true
-                i = i + 1
-                break
-              }
-              inner_tokens.push(tokens[i])
-              i = i + 1
-            }
-            _ => {
-              inner_tokens.push(tokens[i])
-              i = i + 1
-            }
-          }
-        }
-        if !found_end {
-          raise ExpressionError::UnmatchedParen(
-            position=0,
-            message="Missing closing parenthesis ')'",
-          )
-        }
-        let children = parse_tokens(inner_tokens)
-        result.push(OptionalNode(children))
-      }
-      EndOptional => {
-        // Stray end optional — treat as text
-        result.push(TextNode(")"))
-        i = i + 1
-      }
-      Alternation => {
-        // Keep alternation as a sentinel node for second pass
-        result.push(TextNode("/"))
-        // Mark the position — we use a special approach: store as a temporary
-        // We need a way to distinguish real text "/" from alternation.
-        // Let's use a different strategy: store alternation markers directly.
-        // Replace the TextNode we just pushed with nothing, and use a different approach.
-        ignore(result.pop())
-        result.push(AlternationNode([]))
-        i = i + 1
-      }
-      Text(s) => {
-        result.push(TextNode(s))
-        i = i + 1
-      }
-      WhiteSpace(s) => {
-        result.push(TextNode(s))
-        i = i + 1
-      }
+fn Parser::looking_at(self : Parser, at : Int, type_ : TokenType) -> Bool {
+  if at < 0 {
+    return type_ == StartOfLine
+  }
+  if at >= self.tokens.length() {
+    return type_ == EndOfLine
+  }
+  self.tokens[at].type_ == type_
+}
+
+///|
+fn Parser::looking_at_any(
+  self : Parser,
+  at : Int,
+  types : Array[TokenType],
+) -> Bool {
+  types.iter().any(t => self.looking_at(at, t))
+}
+
+///|
+fn nothing() -> ParseResult {
+  { consumed: 0, ast: [], }
+}
+
+///|
+fn Parser::parse_rule(
+  self : Parser,
+  rule : Rule,
+  current : Int,
+) -> ParseResult raise ExpressionError {
+  match rule {
+    TextRule => self.parse_text(current)
+    NameRule => self.parse_name(current)
+    ParameterRule =>
+      self.parse_between(
+        ParameterNode,
+        BeginParameter,
+        EndParameter,
+        [NameRule],
+        current,
+      )
+    OptionalRule =>
+      self.parse_between(
+        OptionalNode,
+        BeginOptional,
+        EndOptional,
+        [OptionalRule, ParameterRule, TextRule],
+        current,
+      )
+    AlternativeSeparatorRule => self.parse_alternative_separator(current)
+    AlternationRule => self.parse_alternation(current)
+  }
+}
+
+///|
+fn text_node(token : Token) -> Node {
+  {
+    type_: TextNode,
+    nodes: [],
+    token: token.text,
+    start: token.start,
+    end: token.end,
+  }
+}
+
+///|
+fn Parser::parse_text(
+  self : Parser,
+  current : Int,
+) -> ParseResult raise ExpressionError {
+  let token = self.tokens[current]
+  match token.type_ {
+    WhiteSpace | Text | EndParameter | EndOptional =>
+      { consumed: 1, ast: [text_node(token)], }
+    Alternation => raise alternation_in_optional_error(self.expression, token)
+    _ => nothing()
+  }
+}
+
+///|
+fn Parser::parse_name(
+  self : Parser,
+  current : Int,
+) -> ParseResult raise ExpressionError {
+  let token = self.tokens[current]
+  match token.type_ {
+    WhiteSpace | Text => { consumed: 1, ast: [text_node(token)], }
+    BeginOptional | EndOptional | BeginParameter | EndParameter | Alternation =>
+      raise invalid_parameter_name_in_node_error(self.expression, token)
+    _ => nothing()
+  }
+}
+
+///|
+fn Parser::parse_alternative_separator(
+  self : Parser,
+  current : Int,
+) -> ParseResult {
+  if !self.looking_at(current, Alternation) {
+    return nothing()
+  }
+  let token = self.tokens[current]
+  {
+    consumed: 1,
+    ast: [
+      {
+        type_: AlternativeNode,
+        nodes: [],
+        token: token.text,
+        start: token.start,
+        end: token.end,
+      },
+    ],
+  }
+}
+
+///|
+fn Parser::parse_alternation(
+  self : Parser,
+  current : Int,
+) -> ParseResult raise ExpressionError {
+  if !self.looking_at_any(current - 1, [StartOfLine, WhiteSpace, EndParameter]) {
+    return nothing()
+  }
+  let result = self.parse_tokens_until(
+    [AlternativeSeparatorRule, OptionalRule, ParameterRule, TextRule],
+    current,
+    [WhiteSpace, EndOfLine, BeginParameter],
+  )
+  let sub_current = current + result.consumed
+  if !result.ast.iter().any(n => n.type_ == AlternativeNode) {
+    return nothing()
+  }
+  let start = self.tokens[current].start
+  let end = self.tokens[sub_current].start
+  // The right boundary token is not consumed.
+  {
+    consumed: result.consumed,
+    ast: [
+      {
+        type_: AlternationNode,
+        nodes: split_alternatives(start, end, result.ast),
+        token: "",
+        start,
+        end,
+      },
+    ],
+  }
+}
+
+///|
+fn Parser::parse_between(
+  self : Parser,
+  type_ : NodeType,
+  begin : TokenType,
+  end : TokenType,
+  rules : Array[Rule],
+  current : Int,
+) -> ParseResult raise ExpressionError {
+  if !self.looking_at(current, begin) {
+    return nothing()
+  }
+  let mut sub_current = current + 1
+  let result = self.parse_tokens_until(rules, sub_current, [end, EndOfLine])
+  sub_current = sub_current + result.consumed
+  if !self.looking_at(sub_current, end) {
+    raise missing_end_token_error(
+      self.expression,
+      begin,
+      end,
+      self.tokens[current],
+    )
+  }
+  {
+    consumed: sub_current + 1 - current,
+    ast: [
+      {
+        type_,
+        nodes: result.ast,
+        token: "",
+        start: self.tokens[current].start,
+        end: self.tokens[sub_current].end,
+      },
+    ],
+  }
+}
+
+///|
+fn Parser::parse_token(
+  self : Parser,
+  rules : Array[Rule],
+  start_at : Int,
+) -> ParseResult raise ExpressionError {
+  for rule in rules {
+    let result = self.parse_rule(rule, start_at)
+    if result.consumed != 0 {
+      return result
     }
   }
-  result
+  // The rules always include a rule that consumes the token.
+  abort("No eligible parsers at token \{start_at}")
 }
 
 ///|
-/// Second pass: detect alternation groups. Alternation markers (empty
-/// AlternationNode) separate alternatives. A group of non-whitespace nodes
-/// separated by alternation markers is gathered into a single AlternationNode.
-fn split_alternations(nodes : Array[Node]) -> Array[Node] {
-  let result : Array[Node] = []
-  let len = nodes.length()
-  let mut i = 0
-  while i < len {
-    // Check if this position starts an alternation group.
-    // An alternation group is a sequence: node+ (AltMarker node+)+
-    // bounded by start/end of expression or whitespace TextNodes.
-    match nodes[i] {
-      AlternationNode([]) => {
-        // Sentinel at current position — this IS an alternation marker.
-        // Start an alternation group with an empty first arm.
-        let alternatives : Array[Array[Node]] = []
-        let mut current_arm : Array[Node] = []
-        alternatives.push(current_arm) // empty left arm
-        current_arm = []
-        i = i + 1
-        while i < len {
-          match nodes[i] {
-            AlternationNode([]) => {
-              alternatives.push(current_arm)
-              current_arm = []
-              i = i + 1
-            }
-            TextNode(s) =>
-              if is_whitespace_text(s) {
-                break
-              } else {
-                current_arm.push(nodes[i])
-                i = i + 1
-              }
-            ParameterNode(_) => break
-            _ => {
-              current_arm.push(nodes[i])
-              i = i + 1
-            }
-          }
-        }
-        alternatives.push(current_arm)
-        result.push(AlternationNode(alternatives))
-      }
-      _ =>
-        if has_alternation_ahead(nodes, i) {
-          // Collect the alternation group
-          let alternatives : Array[Array[Node]] = []
-          let mut current_arm : Array[Node] = []
-          while i < len {
-            match nodes[i] {
-              AlternationNode([]) => {
-                // alternation marker
-                alternatives.push(current_arm)
-                current_arm = []
-                i = i + 1
-              }
-              TextNode(s) =>
-                if is_whitespace_text(s) {
-                  // Whitespace ends the alternation group
-                  break
-                } else {
-                  current_arm.push(nodes[i])
-                  i = i + 1
-                }
-              ParameterNode(_) =>
-                // Parameter node acts as alternation boundary per spec
-                // (bounded by `{` / `}`)
-                break
-              _ => {
-                current_arm.push(nodes[i])
-                i = i + 1
-              }
-            }
-          }
-          alternatives.push(current_arm)
-          result.push(AlternationNode(alternatives))
-        } else {
-          result.push(nodes[i])
-          i = i + 1
-        }
+fn Parser::parse_tokens_until(
+  self : Parser,
+  rules : Array[Rule],
+  start_at : Int,
+  end_types : Array[TokenType],
+) -> ParseResult raise ExpressionError {
+  let mut current = start_at
+  let ast : Array[Node] = []
+  while current < self.tokens.length() {
+    if self.looking_at_any(current, end_types) {
+      break
+    }
+    let result = self.parse_token(rules, current)
+    current = current + result.consumed
+    ast.push_iter(result.ast.iter())
+  }
+  { consumed: current - start_at, ast, }
+}
+
+///|
+/// Split the nodes of an alternation at the separators into alternative
+/// nodes.
+fn split_alternatives(
+  start : Int,
+  end : Int,
+  alternation : Array[Node],
+) -> Array[Node] {
+  let separators : Array[Node] = []
+  let alternatives : Array[Array[Node]] = []
+  let mut alternative : Array[Node] = []
+  for node in alternation {
+    if node.type_ == AlternativeNode {
+      separators.push(node)
+      alternatives.push(alternative)
+      alternative = []
+    } else {
+      alternative.push(node)
     }
   }
-  result
-}
-
-///|
-/// Check if from position `start` there is an alternation marker before the
-/// next whitespace boundary (or end of array). Only returns true if the node
-/// at `start` is NOT whitespace and there IS an alternation marker in the group.
-fn has_alternation_ahead(nodes : Array[Node], start : Int) -> Bool {
-  // Don't start an alternation group on whitespace, sentinel, or parameter
-  match nodes[start] {
-    TextNode(s) => if is_whitespace_text(s) { return false }
-    AlternationNode([]) => return false
-    ParameterNode(_) => return false
-    _ => ()
-  }
-  let len = nodes.length()
-  let mut i = start
-  while i < len {
-    match nodes[i] {
-      AlternationNode([]) => return true
-      TextNode(s) => if is_whitespace_text(s) { return false }
-      ParameterNode(_) => return false
-      _ => ()
-    }
-    i = i + 1
-  }
-  false
-}
-
-///|
-/// Check if a text string is purely whitespace.
-fn is_whitespace_text(s : String) -> Bool {
-  let chars = s.to_array()
-  let mut j = 0
-  while j < chars.length() {
-    let ch = chars[j]
-    if ch != ' ' && ch != '\t' && ch != '\n' && ch != '\r' {
-      return false
-    }
-    j = j + 1
-  }
-  true
-}
-
-///|
-/// Merge adjacent TextNodes into a single TextNode. Also recurse into
-/// OptionalNode children and AlternationNode arms.
-fn merge_text_nodes(nodes : Array[Node]) -> Array[Node] {
-  let result : Array[Node] = []
-  let buf = StringBuilder()
-  for node in nodes {
-    match node {
-      TextNode(s) => buf.write_string(s)
-      _ => {
-        let text = buf.to_string()
-        if text.length() > 0 {
-          result.push(TextNode(text))
-          buf.reset()
-        }
-        match node {
-          OptionalNode(children) =>
-            result.push(OptionalNode(merge_text_nodes(children)))
-          AlternationNode(alternatives) => {
-            let merged_alts : Array[Array[Node]] = []
-            for alt in alternatives {
-              merged_alts.push(merge_text_nodes(alt))
-            }
-            result.push(AlternationNode(merged_alts))
-          }
-          _ => result.push(node)
-        }
-      }
-    }
-  }
-  let text = buf.to_string()
-  if text.length() > 0 {
-    result.push(TextNode(text))
-  }
-  result
-}
-
-///|
-/// Get a textual representation of a token (for fallback cases).
-fn to_text(token : Token) -> String {
-  match token {
-    Text(s) => s
-    WhiteSpace(s) => s
-    BeginParameter => "{"
-    EndParameter => "}"
-    BeginOptional => "("
-    EndOptional => ")"
-    Alternation => "/"
-  }
+  alternatives.push(alternative)
+  let last = alternatives.length() - 1
+  alternatives.mapi((i, nodes) => {
+    let left = if i == 0 { start } else { separators[i - 1].end }
+    let right = if i == last { end } else { separators[i].start }
+    { type_: AlternativeNode, nodes, token: "", start: left, end: right, }
+  })
 }

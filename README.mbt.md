@@ -116,11 +116,24 @@ match expr.match_("MoonBit is 1") {
 | `ValidationError`      | Structural errors (empty alternation, nested optionals, etc.) |
 | `UnknownParameterType` | Unregistered `{name}` in expression |
 
+Each error has `position()` (the code point offset of the problem) and
+`message()`. The message uses the same format as the reference
+implementation, for example:
+
+```
+This Cucumber Expression has a problem at column 3:
+
+(a(b))
+  ^-^
+An optional may not contain an other optional.
+If you did not mean to use an optional type you can use '\(' to escape the '('. For more complicated expressions consider using a regular expression instead.
+```
+
 ```moonbit skip nocheck
 try {
   let _ = @cucumber-expressions.Expression::parse!("{unknown}")
 } catch {
-  @cucumber-expressions.ExpressionError::UnknownParameterType(name=name, ..) =>
+  @cucumber-expressions.ExpressionError::UnknownParameterType(name~, ..) =>
     println("Unknown parameter: " + name)
 }
 ```
