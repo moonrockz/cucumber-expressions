@@ -64,7 +64,7 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
   let reg = ParamTypeRegistry::new()
   // Integer types (all share the same regex patterns)
   let int_patterns = [RegexPattern("-?\\d+"), RegexPattern("\\d+")]
-  reg.register(
+  reg.add_entry(
     "int",
     ParamType::Int,
     int_patterns,
@@ -72,7 +72,7 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
       IntVal(@string.parse_int(groups[0]))
     }),
   )
-  reg.register(
+  reg.add_entry(
     "long",
     ParamType::Long,
     int_patterns,
@@ -80,23 +80,23 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
       LongVal(@string.parse_int64(groups[0]))
     }),
   )
-  reg.register(
+  reg.add_entry(
     "byte",
     ParamType::Byte,
     int_patterns,
     transformer=Transformer::new(fn(groups) raise {
-      ByteVal(@string.parse_int(groups[0]).to_byte())
+      ByteVal(parse_int_in_range(groups[0], "byte", -128, 127).to_byte())
     }),
   )
-  reg.register(
+  reg.add_entry(
     "short",
     ParamType::Short,
     int_patterns,
     transformer=Transformer::new(fn(groups) raise {
-      ShortVal(@string.parse_int(groups[0]))
+      ShortVal(parse_int_in_range(groups[0], "short", -32768, 32767))
     }),
   )
-  reg.register(
+  reg.add_entry(
     "biginteger",
     ParamType::BigInteger,
     int_patterns,
@@ -108,7 +108,7 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
   let float_patterns = [
     RegexPattern("[+-]?(?:\\d+|\\d+\\.\\d*|\\d*\\.\\d+)(?:[eE][+-]?\\d+)?"),
   ]
-  reg.register(
+  reg.add_entry(
     "float",
     ParamType::Float,
     float_patterns,
@@ -116,7 +116,7 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
       FloatVal(@string.parse_double(groups[0]))
     }),
   )
-  reg.register(
+  reg.add_entry(
     "double",
     ParamType::Double_,
     float_patterns,
@@ -124,7 +124,7 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
       DoubleVal(@string.parse_double(groups[0]))
     }),
   )
-  reg.register(
+  reg.add_entry(
     "bigdecimal",
     ParamType::BigDecimal,
     float_patterns,
@@ -135,9 +135,10 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
       }
     }),
   )
-  // String: unescape \" and \' like the reference implementation.
+  // String: the transformer gets the double-quoted and the single-quoted
+  // group. It unescapes \" and \' like the reference implementation.
   // Other backslash sequences stay unchanged.
-  reg.register(
+  reg.add_entry(
     "string",
     ParamType::String_,
     [
@@ -145,21 +146,24 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
       RegexPattern("'([^'\\\\]*(\\\\.[^'\\\\]*)*)'"),
     ],
     transformer=Transformer::new(fn(groups) {
-      StringVal(
+      let s = if groups[0] != "" {
         groups[0]
-        .replace_all(old="\\\"", new="\"")
-        .replace_all(old="\\'", new="'"),
+      } else {
+        groups.get(1).unwrap_or("")
+      }
+      StringVal(
+        s.replace_all(old="\\\"", new="\"").replace_all(old="\\'", new="'"),
       )
     }),
   )
   // Word (identity transformer)
-  reg.register(
+  reg.add_entry(
     "word",
     ParamType::Word,
     [RegexPattern("[^\\s]+")],
     transformer=Transformer::new(fn(groups) { WordVal(groups[0]) }),
   )
-  reg.register(
+  reg.add_entry(
     "",
     ParamType::Anonymous,
     [RegexPattern(".*")],
@@ -169,6 +173,11 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
 }
 
 ///|
+/// Register a parameter type.
+///
+/// Raises an error when the name is already registered, when the name has
+/// one of the characters `{`, `}`, `(`, `)`, `\` or `/`, or when there
+/// are no regexps.
 pub fn ParamTypeRegistry::register(
   self : ParamTypeRegistry,
   name : String,
@@ -177,8 +186,65 @@ pub fn ParamTypeRegistry::register(
   transformer? : Transformer = Transformer::new(fn(groups) {
     ParamValue::CustomVal(@any.of(groups[0]))
   }),
+) -> Unit raise ParameterTypeError {
+  if !is_valid_parameter_type_name(name) {
+    raise IllegalParameterName(name~)
+  }
+  if patterns.is_empty() {
+    raise NoRegexps(name~)
+  }
+  if self.get(name) is Some(_) {
+    raise DuplicateParameterType(name~)
+  }
+  self.add_entry(name, type_, patterns, transformer~)
+}
+
+///|
+fn ParamTypeRegistry::add_entry(
+  self : ParamTypeRegistry,
+  name : String,
+  type_ : ParamType,
+  patterns : Array[RegexPattern],
+  transformer~ : Transformer,
 ) -> Unit {
   self.entries.push({ name, type_, patterns, transformer, })
+}
+
+///|
+/// A name is valid when it has none of `{`, `}`, `(`, `)`, `\` and `/`,
+/// after `\` is removed before the regex characters `[`, `]`, `$`, `.`,
+/// `|`, `?`, `*` and `+`.
+fn is_valid_parameter_type_name(name : String) -> Bool {
+  let chars = name.to_array()
+  let mut i = 0
+  while i < chars.length() {
+    let c = chars[i]
+    if c == '\\' &&
+      i + 1 < chars.length() &&
+      "[]$.|?*+".contains_char(chars[i + 1]) {
+      i = i + 2
+      continue
+    }
+    if "{}()\\/".contains_char(c) {
+      return false
+    }
+    i = i + 1
+  }
+  true
+}
+
+///|
+fn parse_int_in_range(
+  text : String,
+  type_name : String,
+  min : Int,
+  max : Int,
+) -> Int raise {
+  let n = @string.parse_int(text)
+  if n < min || n > max {
+    fail("\{text} is out of range for {\{type_name}}: \{min}..\{max}")
+  }
+  n
 }
 
 ///|

@@ -17,6 +17,8 @@ let m = expr.match_("I have 42 cucumbers in my basket").unwrap()
 // m.params[1].value => WordVal("basket"), m.params[1].raw => "basket"
 ```
 
+Each `Param` has `value`, `type_`, `raw` and `group`. `group` is the capture `Group` of the parameter, with `start` and `end` (UTF-16 offsets). `match_` raises the error of a transformer. `Expression::regexp()` gives the compiled regex.
+
 ## Built-in Parameter Types
 
 All 11 types from the Cucumber Expressions specification:
@@ -27,8 +29,8 @@ All 11 types from the Cucumber Expressions specification:
 | `{float}`        | Decimal and scientific notation  | `3.14`, `-1.5e10`   | `FloatVal(Double)`   |
 | `{double}`       | Same as float                    | `3.14`, `1.5e10`    | `DoubleVal(Double)`  |
 | `{long}`         | 64-bit integers                  | `9223372036854775807` | `LongVal(Int64)`   |
-| `{byte}`         | Byte-range integers              | `127`, `255`        | `ByteVal(Byte)`      |
-| `{short}`        | Short integers                   | `8080`              | `ShortVal(Int)`      |
+| `{byte}`         | Integers from -128 to 127        | `127`, `-128`       | `ByteVal(Byte)` (two's complement) |
+| `{short}`        | Integers from -32768 to 32767    | `8080`              | `ShortVal(Int)`      |
 | `{bigdecimal}`   | Arbitrary-precision decimals     | `99.99`             | `BigDecimalVal(Decimal)` |
 | `{biginteger}`   | Arbitrary-precision integers     | `12345678901234567890` | `BigIntegerVal(BigInt)` |
 | `{string}`       | Single- or double-quoted strings | `"hello"`, `'hi'`   | `StringVal(String)`  |
@@ -64,7 +66,9 @@ expr.match_("I have a dog") // matches
 
 ## Custom Parameter Types
 
-Register your own named parameter types with `ParamTypeRegistry`. An optional transformer converts matched text into a typed value:
+Register your own named parameter types with `ParamTypeRegistry`. An optional transformer converts matched text into a typed value. The transformer gets the values of the capture groups of the regexp, or the whole match when the regexp has no capture groups.
+
+`register` raises `ParameterTypeError` when the name is already registered, when the name has one of `{`, `}`, `(`, `)`, `\` or `/`, or when there are no regexps:
 
 ```moonbit skip nocheck
 let registry = @cucumber-expressions.ParamTypeRegistry::default()

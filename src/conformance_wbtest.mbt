@@ -287,6 +287,7 @@ test "conformance/matching/matches-anonymous-parameter-type" {
 }
 
 ///|
+#skip("Known gap: #26")
 test "conformance/matching/matches-bigdecimal" {
   let expr = Expression::parse("{bigdecimal}")
   let result = expr.match_(

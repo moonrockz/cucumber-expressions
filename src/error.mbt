@@ -212,3 +212,41 @@ fn undefined_parameter_type_error(
 ///|
 #deprecated
 pub extend ExpressionError with @debug.Debug::{to_repr}
+
+///|
+/// Errors that can occur when a parameter type is registered.
+pub suberror ParameterTypeError {
+  /// A parameter type with the name is already registered.
+  DuplicateParameterType(name~ : String)
+  /// The name has a character that is not permitted.
+  IllegalParameterName(name~ : String)
+  /// The parameter type has no regexps.
+  NoRegexps(name~ : String)
+} derive(Debug)
+
+///|
+/// The error message.
+pub fn ParameterTypeError::message(self : ParameterTypeError) -> String {
+  match self {
+    DuplicateParameterType(name="") =>
+      "The anonymous parameter type has already been defined"
+    DuplicateParameterType(name~) =>
+      "There is already a parameter type with name \{name}"
+    IllegalParameterName(name~) =>
+      "Illegal character in parameter name {\{name}}. Parameter names may not contain '{', '}', '(', ')', '\\' or '/'"
+    NoRegexps(name~) =>
+      "The parameter type {\{name}} must have at least one regexp"
+  }
+}
+
+///|
+pub impl Show for ParameterTypeError with fn output(self, logger) {
+  logger.write_string(self.message())
+}
+
+///|
+pub extend ParameterTypeError with Show::{to_string, output}
+
+///|
+#deprecated
+pub extend ParameterTypeError with @debug.Debug::{to_repr}
