@@ -19,6 +19,16 @@ pub fn tokenize(String) -> Array[Token] raise ExpressionError
 pub fn version() -> String
 
 // Errors
+pub suberror AmbiguousParameterTypeError {
+  AmbiguousParameterType(regexp~ : String, expression_regexp~ : String, names~ : Array[String], generated~ : Array[String])
+} derive(@debug.Debug)
+pub fn AmbiguousParameterTypeError::message(Self) -> String
+pub fn AmbiguousParameterTypeError::output(Self, &Logger) -> Unit
+#deprecated
+pub fn AmbiguousParameterTypeError::to_repr(Self) -> @debug.Repr
+pub fn AmbiguousParameterTypeError::to_string(Self) -> String
+pub impl Show for AmbiguousParameterTypeError
+
 pub suberror ExpressionError {
   UnmatchedBrace(position~ : Int, message~ : String)
   UnmatchedParen(position~ : Int, message~ : String)
@@ -39,6 +49,7 @@ pub suberror ParameterTypeError {
   DuplicateParameterType(name~ : String)
   IllegalParameterName(name~ : String)
   NoRegexps(name~ : String)
+  DuplicatePreferentialParameterType(regexp~ : String, first~ : String, second~ : String)
 } derive(@debug.Debug)
 pub fn ParameterTypeError::message(Self) -> String
 pub fn ParameterTypeError::output(Self, &Logger) -> Unit
@@ -48,6 +59,12 @@ pub fn ParameterTypeError::to_string(Self) -> String
 pub impl Show for ParameterTypeError
 
 // Types and methods
+pub(all) struct CucumberExpressionGenerator {
+  // private fields
+}
+pub fn CucumberExpressionGenerator::generate_expressions(Self, String) -> Array[GeneratedExpression]
+pub fn CucumberExpressionGenerator::new(ParamTypeRegistry) -> Self
+
 pub(all) struct Expression {
   // private fields
 }
@@ -56,6 +73,20 @@ pub fn Expression::parse(String) -> Self raise ExpressionError
 pub fn Expression::parse_with_registry(String, ParamTypeRegistry) -> Self raise ExpressionError
 pub fn Expression::regexp(Self) -> String
 pub fn Expression::source(Self) -> String
+
+pub(all) struct ExpressionFactory {
+  // private fields
+}
+pub fn ExpressionFactory::create_expression(Self, String) -> StepExpression raise ExpressionError
+pub fn ExpressionFactory::new(ParamTypeRegistry) -> Self
+
+pub(all) struct GeneratedExpression {
+  parameter_types : Array[ParamTypeEntry]
+  // private fields
+}
+pub fn GeneratedExpression::parameter_infos(Self) -> Array[ParameterInfo]
+pub fn GeneratedExpression::parameter_names(Self) -> Array[String]
+pub fn GeneratedExpression::source(Self) -> String
 
 pub(all) struct Group {
   value : String?
@@ -156,6 +187,8 @@ pub(all) struct ParamTypeEntry {
   type_ : ParamType
   patterns : Array[RegexPattern]
   transformer : Transformer
+  use_for_snippets : Bool
+  prefer_for_regexp_match : Bool
 } derive(@debug.Debug)
 #deprecated
 pub fn ParamTypeEntry::equal(Self, Self) -> Bool
@@ -171,8 +204,9 @@ pub(all) struct ParamTypeRegistry {
 pub fn ParamTypeRegistry::default() -> Self
 pub fn ParamTypeRegistry::entries_view(Self) -> ArrayView[ParamTypeEntry]
 pub fn ParamTypeRegistry::get(Self, String) -> ParamTypeEntry?
+pub fn ParamTypeRegistry::lookup_by_regexp(Self, String, String, String) -> ParamTypeEntry? raise AmbiguousParameterTypeError
 pub fn ParamTypeRegistry::new() -> Self
-pub fn ParamTypeRegistry::register(Self, String, ParamType, Array[RegexPattern], transformer? : Transformer) -> Unit raise ParameterTypeError
+pub fn ParamTypeRegistry::register(Self, String, ParamType, Array[RegexPattern], transformer? : Transformer, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> Unit raise ParameterTypeError
 
 pub(all) enum ParamValue {
   IntVal(Int)
@@ -187,6 +221,7 @@ pub(all) enum ParamValue {
   BigDecimalVal(@decimal.Decimal)
   BigIntegerVal(@bigint.BigInt)
   CustomVal(@any.Any)
+  NullVal
 }
 #deprecated
 pub fn ParamValue::equal(Self, Self) -> Bool
@@ -200,6 +235,18 @@ pub impl Eq for ParamValue
 pub impl Show for ParamValue
 pub impl @debug.Debug for ParamValue
 
+pub(all) struct ParameterInfo {
+  type_ : ParamType
+  name : String
+  count : Int
+} derive(Eq, @debug.Debug)
+#deprecated
+pub fn ParameterInfo::equal(Self, Self) -> Bool
+#deprecated
+pub fn ParameterInfo::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn ParameterInfo::to_repr(Self) -> @debug.Repr
+
 pub(all) struct RegexPattern {
   // private fields
 } derive(Eq, @debug.Debug)
@@ -211,6 +258,21 @@ pub fn RegexPattern::not_equal(Self, Self) -> Bool
 #deprecated
 pub fn RegexPattern::to_repr(Self) -> @debug.Repr
 pub fn RegexPattern::to_string(Self) -> String
+
+pub(all) struct RegularExpression {
+  // private fields
+}
+pub fn RegularExpression::match_(Self, String) -> Match? raise
+pub fn RegularExpression::new(String, registry? : ParamTypeRegistry) -> Self raise ExpressionError
+pub fn RegularExpression::regexp(Self) -> String
+pub fn RegularExpression::source(Self) -> String
+
+pub(all) enum StepExpression {
+  Cucumber(Expression)
+  Regular(RegularExpression)
+}
+pub fn StepExpression::match_(Self, String) -> Match? raise
+pub fn StepExpression::source(Self) -> String
 
 pub(all) struct Token {
   type_ : TokenType

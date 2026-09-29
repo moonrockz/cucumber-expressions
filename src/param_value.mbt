@@ -15,6 +15,9 @@ pub(all) enum ParamValue {
   BigDecimalVal(@decimal.Decimal)
   BigIntegerVal(BigInt)
   CustomVal(@any.Any)
+  /// The capture group did not match. Only a `RegularExpression` with an
+  /// optional group gives this value.
+  NullVal
 }
 
 ///|
@@ -32,6 +35,7 @@ pub impl Show for ParamValue with fn output(self, logger) {
     BigDecimalVal(v) => logger.write_string("BigDecimalVal(\{v})")
     BigIntegerVal(v) => logger.write_string("BigIntegerVal(\{v})")
     CustomVal(any) => logger.write_string("CustomVal(<\{any.type_name()}>)")
+    NullVal => logger.write_string("NullVal")
   }
 }
 
@@ -58,6 +62,7 @@ pub impl @debug.Debug for ParamValue with fn to_repr(self) {
       @debug.Repr::ctor("CustomVal", [
         (None, @debug.Repr::literal("<\{any.type_name()}>")),
       ])
+    NullVal => @debug.Repr::literal("NullVal")
   }
 }
 
@@ -76,6 +81,7 @@ pub impl Eq for ParamValue with fn equal(self, other) -> Bool {
     (BigDecimalVal(a), BigDecimalVal(b)) => a == b
     (BigIntegerVal(a), BigIntegerVal(b)) => a == b
     (CustomVal(_), CustomVal(_)) => true // identity comparison not meaningful for Any
+    (NullVal, NullVal) => true
     _ => false
   }
 }

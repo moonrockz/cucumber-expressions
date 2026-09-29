@@ -101,6 +101,37 @@ let m = expr.match_("the red ball").unwrap()
 // m.params[0].value => CustomVal(<Any>), m.params[0].raw => "red"
 ```
 
+### Regular Expressions
+
+`RegularExpression` matches a step with a regex. Each top-level capture group gives one parameter. The registry finds the type of a group from its regexp, so `(\d+)` gives `{int}`. A group with no registered type gives `AnonymousVal`, and an optional group that did not match gives `NullVal`.
+
+```moonbit skip nocheck
+let expr = @cucumber-expressions.RegularExpression::new("^I have (\\d+) cukes? in my (.+)$")
+let m = expr.match_("I have 3 cukes in my belly").unwrap()
+// m.params[0].value => IntVal(3), m.params[1].value => AnonymousVal("belly")
+```
+
+When more than one parameter type has the regexp of a group, `match_` raises `AmbiguousParameterTypeError`. Give one of the types `prefer_for_regexp_match=true` in `register` to fix this.
+
+`ExpressionFactory` makes a `StepExpression` from a string. A string that starts with `^` or ends with `$`, or that starts and ends with `/`, is a regular expression. All other strings are Cucumber Expressions.
+
+```moonbit skip nocheck
+let factory = @cucumber-expressions.ExpressionFactory::new(registry)
+let expr = factory.create_expression("^I have (\\d+) cukes$") // Regular(...)
+let expr = factory.create_expression("I have {int} cukes")    // Cucumber(...)
+```
+
+### Snippet Generation
+
+`CucumberExpressionGenerator` makes Cucumber Expressions from step text, for example for the snippet of an undefined step. It uses only the parameter types with `use_for_snippets=true` (the default for custom types; for the built-in types, only `{int}`, `{float}` and `{string}`).
+
+```moonbit skip nocheck
+let generator = @cucumber-expressions.CucumberExpressionGenerator::new(registry)
+let generated = generator.generate_expressions("I have 2 cucumbers and 1.5 tomato")
+// generated[0].source() => "I have {int} cucumbers and {float} tomato"
+// generated[0].parameter_names() => ["int", "float"]
+```
+
 ### Error Handling
 
 `Expression::parse` and `compile_expression` raise `ExpressionError`:

@@ -28,12 +28,13 @@ pub fn Group::values(self : Group) -> Array[String?] {
 ///|
 priv struct GroupBuilder {
   mut capturing : Bool
+  mut source : String
   children : Array[GroupBuilder]
 }
 
 ///|
 fn GroupBuilder::new() -> GroupBuilder {
-  { capturing: true, children: [], }
+  { capturing: true, source: "", children: [], }
 }
 
 ///|
@@ -77,6 +78,7 @@ fn is_non_capturing(source : Array[Char], i : Int) -> Bool {
 fn create_group_builder(source : String) -> GroupBuilder {
   let chars = source.to_array()
   let stack : Array[GroupBuilder] = [GroupBuilder::new()]
+  let starts : Array[Int] = []
   let mut escaping = false
   let mut char_class = false
   for i, c in chars {
@@ -89,13 +91,16 @@ fn create_group_builder(source : String) -> GroupBuilder {
       if is_non_capturing(chars, i) {
         builder.capturing = false
       }
+      starts.push(i)
       stack.push(builder)
     } else if c == ')' && !escaping && !char_class {
       guard stack.pop() is Some(builder) else {
         abort("unbalanced parentheses")
       }
       let parent = stack[stack.length() - 1]
+      let start = starts.pop().unwrap_or(0)
       if builder.capturing {
+        builder.source = String::from_array(chars[start + 1:i])
         parent.children.push(builder)
       } else {
         parent.children.push_iter(builder.children.iter())

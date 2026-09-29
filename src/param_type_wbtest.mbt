@@ -209,6 +209,8 @@ test "ParamTypeEntry fields are accessible" {
     transformer: Transformer::new(fn(groups) {
       ParamValue::CustomVal(@any.of(groups[0]))
     }),
+    use_for_snippets: true,
+    prefer_for_regexp_match: false,
   }
   assert_eq(entry.name, "color")
   assert_eq(entry.type_, ParamType::Custom("color"))
@@ -422,6 +424,8 @@ test "ParamTypeEntry with transformer" {
     type_: ParamType::Int,
     patterns: [RegexPattern("\\d+")],
     transformer,
+    use_for_snippets: true,
+    prefer_for_regexp_match: false,
   }
   assert_eq(entry.name, "test")
   let result = entry.transformer.call(["42"])
