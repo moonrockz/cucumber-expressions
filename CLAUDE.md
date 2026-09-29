@@ -16,6 +16,7 @@ Use **`mise run`** for all operations:
 
 ```bash
 mise run test:unit        # MoonBit unit tests
+mise run conformance:generate  # Generate src/conformance_wbtest.mbt from reference testdata
 ```
 
 ## Mise Tasks
