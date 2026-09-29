@@ -141,3 +141,30 @@ test "match preserves raw text" {
   assert_eq(m.params[0].raw, "10")
   assert_eq(m.params[1].raw, "20")
 }
+
+///|
+test "Expression: string parameter unescapes escaped double quote" {
+  let expr = Expression::parse("the token is {string}")
+  let result = expr.match_("the token is \"a\\\"b\"")
+  guard result is Some(m) else { fail("expected match") }
+  guard m.params[0].value is StringVal(s) else { fail("expected StringVal") }
+  inspect(s, content="a\"b")
+}
+
+///|
+test "Expression: string parameter unescapes escaped single quote" {
+  let expr = Expression::parse("the token is {string}")
+  let result = expr.match_("the token is 'a\\'b'")
+  guard result is Some(m) else { fail("expected match") }
+  guard m.params[0].value is StringVal(s) else { fail("expected StringVal") }
+  inspect(s, content="a'b")
+}
+
+///|
+test "Expression: string parameter keeps other backslash sequences" {
+  let expr = Expression::parse("the token is {string}")
+  let result = expr.match_("the token is \"a\\\\n\\\"b\\\\\"")
+  guard result is Some(m) else { fail("expected match") }
+  guard m.params[0].value is StringVal(s) else { fail("expected StringVal") }
+  inspect(s, content="a\\\\n\"b\\\\")
+}

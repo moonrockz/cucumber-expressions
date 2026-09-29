@@ -135,7 +135,8 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
       }
     }),
   )
-  // String and word (identity transformers)
+  // String: unescape \" and \' like the reference implementation.
+  // Other backslash sequences stay unchanged.
   reg.register(
     "string",
     ParamType::String_,
@@ -143,8 +144,15 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
       RegexPattern("\"([^\"\\\\]*(\\\\.[^\"\\\\]*)*)\""),
       RegexPattern("'([^'\\\\]*(\\\\.[^'\\\\]*)*)'"),
     ],
-    transformer=Transformer::new(fn(groups) { StringVal(groups[0]) }),
+    transformer=Transformer::new(fn(groups) {
+      StringVal(
+        groups[0]
+        .replace_all(old="\\\"", new="\"")
+        .replace_all(old="\\'", new="'"),
+      )
+    }),
   )
+  // Word (identity transformer)
   reg.register(
     "word",
     ParamType::Word,
