@@ -6,7 +6,6 @@ import {
   "moonbitlang/core/debug",
   "moonbitlang/core/json",
   "moonbitlang/x/decimal",
-  "tonyfettes/any",
 }
 
 // Values
@@ -220,7 +219,6 @@ pub(all) enum ParamValue {
   AnonymousVal(String)
   BigDecimalVal(@decimal.Decimal)
   BigIntegerVal(@bigint.BigInt)
-  CustomVal(@any.Any)
   NullVal
 }
 #deprecated

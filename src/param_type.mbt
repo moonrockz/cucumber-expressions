@@ -211,13 +211,16 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
 /// use the type. `prefer_for_regexp_match` (default `false`) makes a
 /// `RegularExpression` use this type before other types with the same
 /// regexp.
+///
+/// Without a `transformer`, the value is `StringVal` of the first value:
+/// the first capture group, or the whole match when there are no groups.
 pub fn ParamTypeRegistry::register(
   self : ParamTypeRegistry,
   name : String,
   type_ : ParamType,
   patterns : Array[RegexPattern],
   transformer? : Transformer = Transformer::new(fn(groups) {
-    ParamValue::CustomVal(@any.of(groups[0]))
+    ParamValue::StringVal(groups[0])
   }),
   use_for_snippets? : Bool = true,
   prefer_for_regexp_match? : Bool = false,

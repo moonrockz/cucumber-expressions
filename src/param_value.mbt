@@ -1,7 +1,6 @@
 ///|
 /// A typed value produced by a transformer function.
 /// Built-in types have concrete variants for compile-time pattern matching.
-/// Custom types use `CustomVal(@any.Any)` for type-erased transformer results.
 pub(all) enum ParamValue {
   IntVal(Int)
   FloatVal(Double)
@@ -14,7 +13,6 @@ pub(all) enum ParamValue {
   AnonymousVal(String)
   BigDecimalVal(@decimal.Decimal)
   BigIntegerVal(BigInt)
-  CustomVal(@any.Any)
   /// The capture group did not match. Only a `RegularExpression` with an
   /// optional group gives this value.
   NullVal
@@ -34,7 +32,6 @@ pub impl Show for ParamValue with fn output(self, logger) {
     AnonymousVal(v) => logger.write_string("AnonymousVal(\{v})")
     BigDecimalVal(v) => logger.write_string("BigDecimalVal(\{v})")
     BigIntegerVal(v) => logger.write_string("BigIntegerVal(\{v})")
-    CustomVal(any) => logger.write_string("CustomVal(<\{any.type_name()}>)")
     NullVal => logger.write_string("NullVal")
   }
 }
@@ -58,10 +55,6 @@ pub impl @debug.Debug for ParamValue with fn to_repr(self) {
       ])
     BigIntegerVal(v) =>
       @debug.Repr::ctor("BigIntegerVal", [(None, @debug.Repr(v))])
-    CustomVal(any) =>
-      @debug.Repr::ctor("CustomVal", [
-        (None, @debug.Repr::literal("<\{any.type_name()}>")),
-      ])
     NullVal => @debug.Repr::literal("NullVal")
   }
 }
@@ -80,7 +73,6 @@ pub impl Eq for ParamValue with fn equal(self, other) -> Bool {
     (AnonymousVal(a), AnonymousVal(b)) => a == b
     (BigDecimalVal(a), BigDecimalVal(b)) => a == b
     (BigIntegerVal(a), BigIntegerVal(b)) => a == b
-    (CustomVal(_), CustomVal(_)) => true // identity comparison not meaningful for Any
     (NullVal, NullVal) => true
     _ => false
   }

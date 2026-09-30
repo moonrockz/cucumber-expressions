@@ -207,7 +207,7 @@ test "ParamTypeEntry fields are accessible" {
     type_: ParamType::Custom("color"),
     patterns: [RegexPattern("red|blue|green")],
     transformer: Transformer::new(fn(groups) {
-      ParamValue::CustomVal(@any.of(groups[0]))
+      ParamValue::StringVal(groups[0])
     }),
     use_for_snippets: true,
     prefer_for_regexp_match: false,
@@ -240,18 +240,6 @@ test "get returns ParamTypeEntry" {
 test "ParamValue::IntVal" {
   let v = ParamValue::IntVal(42)
   inspect(v, content="IntVal(42)")
-}
-
-///|
-test "ParamValue::CustomVal wraps Any" {
-  let v = ParamValue::CustomVal(@any.of("red"))
-  match v {
-    CustomVal(any) => {
-      let s : String = any.to()
-      assert_eq(s, "red")
-    }
-    _ => fail("expected CustomVal")
-  }
 }
 
 ///|
