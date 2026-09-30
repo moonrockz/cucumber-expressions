@@ -37,14 +37,7 @@ OUTPUT = ROOT / "src" / "conformance_wbtest.mbt"
 
 # Reference cases that fail today. Each one is generated with #skip and the
 # issue that tracks the gap. Remove an entry when its issue is fixed.
-KNOWN_GAPS: dict[str, int] = {
-    "matching/does-not-allow-alternation-in-optional": 7,
-    "transformation/escape-regex-characters": 21,
-    "transformation/parameter": 21,
-    "parser/empty-alternation": 22,
-    "parser/empty-alternations": 22,
-    "parser/optional-containing-nested-optional": 22,
-}
+KNOWN_GAPS: dict[str, int] = {}
 
 # Reference suites that need an API this package does not have yet.
 UNSUPPORTED_SUITES: dict[str, int] = {
@@ -101,18 +94,23 @@ def test_block(case_id: str, body: list[str]) -> str:
     return f'///|\n{skip_attr(case_id)}test "conformance/{case_id}" {{\n{lines}\n}}\n'
 
 
-def expect_raise(call: str) -> list[str]:
+def expect_error(call: str, expected: str) -> list[str]:
     return [
-        f"let raised = try {call} catch {{ _ => true }} noraise {{ _ => false }}",
-        'if !raised { fail("expected an error") }',
+        f"let message = try {call} catch {{",
+        "  err => err.message()",
+        "} noraise {",
+        '  _ => fail("expected an error")',
+        "}",
+        f"assert_eq(message, {lit(expected)})",
     ]
 
 
 def matching_case(case_id: str, case: dict) -> str:
     expression = lit(case["expression"])
     if "exception" in case:
-        # Error text is not compared yet: see #20.
-        return test_block(case_id, expect_raise(f"Expression::parse({expression})"))
+        return test_block(
+            case_id, expect_error(f"Expression::parse({expression})", case["exception"])
+        )
 
     body = [
         f"let expr = Expression::parse({expression})",
@@ -151,14 +149,14 @@ def transformation_case(case_id: str, case: dict) -> str:
 def parser_case(case_id: str, case: dict) -> str:
     expression = lit(case["expression"])
     if "exception" in case:
-        return test_block(case_id, expect_raise(f"parse_expression({expression})"))
-    # Positions are not compared: see #19.
-    expected = render_node(case["expected_ast"])
+        return test_block(
+            case_id, expect_error(f"parse_expression({expression})", case["exception"])
+        )
     return test_block(
         case_id,
         [
             f"let ast = parse_expression({expression})",
-            f"let expected = {expected}",
+            f"let expected = {render_node(case['expected_ast'])}",
             'if ast != expected { fail("got " + @debug.to_string(ast)) }',
         ],
     )
@@ -167,80 +165,55 @@ def parser_case(case_id: str, case: dict) -> str:
 def tokenizer_case(case_id: str, case: dict) -> str:
     expression = lit(case["expression"])
     if "exception" in case:
-        return test_block(case_id, expect_raise(f"tokenize({expression})"))
-    # Positions and START_OF_LINE/END_OF_LINE are not compared: see #19.
-    expected = "[" + ", ".join(render_tokens(case["expected_tokens"])) + "]"
+        return test_block(
+            case_id, expect_error(f"tokenize({expression})", case["exception"])
+        )
+    tokens = ", ".join(render_token(token) for token in case["expected_tokens"])
     return test_block(
         case_id,
         [
             f"let tokens = tokenize({expression})",
-            f"let expected : Array[Token] = {expected}",
+            f"let expected : Array[Token] = [{tokens}]",
             'if tokens != expected { fail("got " + @debug.to_string(tokens)) }',
         ],
     )
 
 
-def render_node(node: dict) -> str:
-    kind = node["type"]
-    if kind == "EXPRESSION_NODE":
-        return f"ExpressionNode({render_children(node)})"
-    if kind == "OPTIONAL_NODE":
-        return f"OptionalNode({render_children(node)})"
-    if kind == "PARAMETER_NODE":
-        name = "".join(child["token"] for child in node.get("nodes", []))
-        return f"ParameterNode({lit(name)})"
-    if kind == "ALTERNATION_NODE":
-        arms = [render_children(arm) for arm in node["nodes"]]
-        return f"AlternationNode([{', '.join(arms)}])"
-    raise ValueError(f"unexpected node type {kind}")
-
-
-def render_children(node: dict) -> str:
-    """Render child nodes. Adjacent text nodes are joined, as this parser does."""
-    rendered: list[str] = []
-    text: str | None = None
-    for child in node.get("nodes", []):
-        if child["type"] == "TEXT_NODE":
-            text = (text or "") + child["token"]
-            continue
-        if text is not None:
-            rendered.append(f"TextNode({lit(text)})")
-            text = None
-        rendered.append(render_node(child))
-    if text is not None:
-        rendered.append(f"TextNode({lit(text)})")
-    return f"[{', '.join(rendered)}]"
-
-
-SIMPLE_TOKENS = {
-    "BEGIN_PARAMETER": "BeginParameter",
-    "END_PARAMETER": "EndParameter",
-    "BEGIN_OPTIONAL": "BeginOptional",
-    "END_OPTIONAL": "EndOptional",
-    "ALTERNATION": "Alternation",
+NODE_TYPES = {
+    "EXPRESSION_NODE": "ExpressionNode",
+    "OPTIONAL_NODE": "OptionalNode",
+    "ALTERNATION_NODE": "AlternationNode",
+    "ALTERNATIVE_NODE": "AlternativeNode",
+    "PARAMETER_NODE": "ParameterNode",
 }
 
 
-def render_tokens(tokens: list[dict]) -> list[str]:
-    """Render tokens. Adjacent tokens of the same text kind are joined."""
-    merged: list[tuple[str, str]] = []
-    for token in tokens:
-        kind = token["type"]
-        if kind in ("START_OF_LINE", "END_OF_LINE"):
-            continue
-        if kind in ("TEXT", "WHITE_SPACE") and merged and merged[-1][0] == kind:
-            merged[-1] = (kind, merged[-1][1] + token["text"])
-        else:
-            merged.append((kind, token["text"]))
-    rendered = []
-    for kind, text in merged:
-        if kind == "TEXT":
-            rendered.append(f"Text({lit(text)})")
-        elif kind == "WHITE_SPACE":
-            rendered.append(f"WhiteSpace({lit(text)})")
-        else:
-            rendered.append(SIMPLE_TOKENS[kind])
-    return rendered
+def render_node(node: dict) -> str:
+    start, end = node["start"], node["end"]
+    if node["type"] == "TEXT_NODE":
+        return f"conformance_text_node({lit(node['token'])}, {start}, {end})"
+    nodes = ", ".join(render_node(child) for child in node.get("nodes", []))
+    return f"conformance_node({NODE_TYPES[node['type']]}, {start}, {end}, [{nodes}])"
+
+
+TOKEN_TYPES = {
+    "START_OF_LINE": "StartOfLine",
+    "END_OF_LINE": "EndOfLine",
+    "WHITE_SPACE": "WhiteSpace",
+    "BEGIN_OPTIONAL": "BeginOptional",
+    "END_OPTIONAL": "EndOptional",
+    "BEGIN_PARAMETER": "BeginParameter",
+    "END_PARAMETER": "EndParameter",
+    "ALTERNATION": "Alternation",
+    "TEXT": "Text",
+}
+
+
+def render_token(token: dict) -> str:
+    return (
+        f"{{ type_: {TOKEN_TYPES[token['type']]}, text: {lit(token['text'])}, "
+        f"start: {token['start']}, end: {token['end']} }}"
+    )
 
 
 SUITES = {
@@ -281,6 +254,21 @@ fn conformance_text(value : ParamValue) -> String? {
     BigIntegerVal(n) => Some(n.to_string())
     _ => None
   }
+}
+
+///|
+fn conformance_node(
+  type_ : NodeType,
+  start : Int,
+  end : Int,
+  nodes : Array[Node],
+) -> Node {
+  { type_, nodes, token: "", start, end }
+}
+
+///|
+fn conformance_text_node(token : String, start : Int, end : Int) -> Node {
+  { type_: TextNode, nodes: [], token, start, end }
 }
 """
 

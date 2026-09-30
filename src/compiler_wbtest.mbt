@@ -31,13 +31,23 @@ test "compile: alternation with optional" {
 ///|
 test "compile: parameter int" {
   let result = compile_expression("{int}")
-  inspect(result, content="^((?:(?:-?\\d+))|(?:(?:\\d+)))$")
+  inspect(
+    result,
+    content=(
+      #|^((?:-?\d+)|(?:\d+))$
+    ),
+  )
 }
 
 ///|
 test "compile: parameter word" {
   let result = compile_expression("{word}")
-  inspect(result, content="^((?:[^\\s]+))$")
+  inspect(
+    result,
+    content=(
+      #|^([^\s]+)$
+    ),
+  )
 }
 
 ///|
@@ -54,7 +64,12 @@ test "compile: parameter string" {
 ///|
 test "compile: parameter anonymous" {
   let result = compile_expression("{}")
-  inspect(result, content="^((?:.*))$")
+  inspect(
+    result,
+    content=(
+      #|^(.*)$
+    ),
+  )
 }
 
 ///|

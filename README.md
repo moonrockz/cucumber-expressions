@@ -98,7 +98,7 @@ let m = expr.match_("the red ball").unwrap()
 
 ### Error Handling
 
-`Expression::parse` raises `ExpressionError` with descriptive messages and source positions:
+`tokenize`, `parse_expression`, `compile_expression` and `Expression::parse` raise `ExpressionError`. `tokenize` and `parse_expression` raise only the syntax errors; the structure errors come when the expression compiles:
 
 | Variant                | Cause                                                         |
 | ---------------------- | ------------------------------------------------------------- |
@@ -108,6 +108,19 @@ let m = expr.match_("the red ball").unwrap()
 | `UnexpectedEscapeEnd`  | Backslash at end of expression                                |
 | `ValidationError`      | Structural errors (empty alternation, nested optionals, etc.) |
 | `UnknownParameterType` | Unregistered `{name}` in expression                           |
+
+Each error has `position()` (the code point offset of the problem) and
+`message()`. One error has no column: when the compiled regex does not compile (for example because a custom parameter type has a regexp that is not valid), the position is 0 and the message gives the regex error. The message uses the same format as the reference
+implementation, for example:
+
+```
+This Cucumber Expression has a problem at column 3:
+
+(a(b))
+  ^-^
+An optional may not contain an other optional.
+If you did not mean to use an optional type you can use '\(' to escape the '('. For more complicated expressions consider using a regular expression instead.
+```
 
 ## Specification Compliance
 

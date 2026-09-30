@@ -44,7 +44,10 @@ test "custom param: unknown type without custom registry" {
     e => Err(e)
   }
   guard result is Err(e) else { fail("expected error for unknown type") }
-  inspect(e.to_string().contains("Unknown parameter type"), content="true")
+  inspect(
+    e.to_string().contains("Undefined parameter type 'color'"),
+    content="true",
+  )
 }
 
 ///|
