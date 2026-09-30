@@ -50,3 +50,26 @@ test "captures: optional gives None when the group did not match" {
   debug_inspect(part.run("t", [None]), content="None")
   debug_inspect(part.run("t", [Some("7")]), content="Some(7)")
 }
+
+///|
+test "captures: the wrong number of values raises WrongGroupCount" {
+  let too_many = try Captures::int().run("t", [Some("1"), Some("2")]) catch {
+    e => e.to_string()
+  } noraise {
+    _ => fail("expected an error")
+  }
+  inspect(
+    too_many,
+    content="The parameter type {t} decodes 1 capture group, but the match has 2",
+  )
+  let pair = Captures::int().zip(Captures::int()).map((a, b) => a + b)
+  let too_few = try pair.run("t", [Some("1")]) catch {
+    e => e.to_string()
+  } noraise {
+    _ => fail("expected an error")
+  }
+  inspect(
+    too_few,
+    content="The parameter type {t} decodes 2 capture groups, but the match has 1",
+  )
+}

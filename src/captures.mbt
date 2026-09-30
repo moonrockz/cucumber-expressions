@@ -104,11 +104,15 @@ pub fn[A, T] Captures1::map(
 
 ///|
 /// Decode the values of the capture groups of the parameter type `name`.
+/// Raises `WrongGroupCount` when the number of values is not `count`.
 fn[T] Captures1::run(
   self : Captures1[T],
   name : String,
   values : Array[String?],
 ) -> T raise {
+  if values.length() != self.count {
+    raise WrongGroupCount(name~, expected=self.count, actual=values.length())
+  }
   (self.decode)(values[:], 1) catch {
     MissingGroup(index) => raise GroupDidNotMatch(name~, index~)
     e => raise e

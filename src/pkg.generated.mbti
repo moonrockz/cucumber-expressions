@@ -55,6 +55,7 @@ pub suberror ParameterTypeError {
   GroupDidNotMatch(name~ : String, index~ : Int)
   ArityMismatch(name~ : String, expected~ : Int, groups~ : Int)
   InvalidRegexp(name~ : String, regexp~ : String)
+  WrongGroupCount(name~ : String, expected~ : Int, actual~ : Int)
 } derive(@debug.Debug)
 pub fn ParameterTypeError::message(Self) -> String
 pub fn ParameterTypeError::output(Self, &Logger) -> Unit

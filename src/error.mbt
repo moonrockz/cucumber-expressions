@@ -255,6 +255,9 @@ pub suberror ParameterTypeError {
   ArityMismatch(name~ : String, expected~ : Int, groups~ : Int)
   /// A regexp of a typed parameter type has parentheses that do not balance.
   InvalidRegexp(name~ : String, regexp~ : String)
+  /// The decoder of a typed parameter type got a different number of
+  /// values than it decodes.
+  WrongGroupCount(name~ : String, expected~ : Int, actual~ : Int)
 } derive(Debug)
 
 ///|
@@ -279,9 +282,21 @@ pub fn ParameterTypeError::message(self : ParameterTypeError) -> String {
     GroupDidNotMatch(name~, index~) =>
       "Capture group \{index} of the parameter type {\{name}} did not match"
     ArityMismatch(name~, expected~, groups~) =>
-      "The parameter type {\{name}} decodes \{expected} capture groups, but its regexps have \{groups}"
+      "The parameter type {\{name}} decodes \{capture_groups(expected)}, but its regexps have \{capture_groups(groups)}"
     InvalidRegexp(name~, regexp~) =>
       "The regexp /\{regexp}/ of the parameter type {\{name}} has parentheses that do not balance"
+    WrongGroupCount(name~, expected~, actual~) =>
+      "The parameter type {\{name}} decodes \{capture_groups(expected)}, but the match has \{actual}"
+  }
+}
+
+///|
+/// `count` with "capture group" or "capture groups".
+fn capture_groups(count : Int) -> String {
+  if count == 1 {
+    "1 capture group"
+  } else {
+    "\{count} capture groups"
   }
 }
 

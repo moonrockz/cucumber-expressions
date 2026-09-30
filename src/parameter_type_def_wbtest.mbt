@@ -99,6 +99,6 @@ test "define_type1: the arity check applies" {
   }
   inspect(
     message,
-    content="The parameter type {pair} decodes 1 capture groups, but its regexps have 2",
+    content="The parameter type {pair} decodes 1 capture group, but its regexps have 2 capture groups",
   )
 }

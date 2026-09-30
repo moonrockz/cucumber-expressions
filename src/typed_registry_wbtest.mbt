@@ -79,7 +79,7 @@ test "define_with: arity mismatch is raised and nothing is registered" {
   }
   inspect(
     message,
-    content="The parameter type {coord} decodes 3 capture groups, but its regexps have 2",
+    content="The parameter type {coord} decodes 3 capture groups, but its regexps have 2 capture groups",
   )
   inspect(reg.get("coord") is None, content="true")
 }
@@ -94,6 +94,22 @@ test "define_with: one value with more than one group is a mismatch" {
     _ => false
   }
   inspect(raised, content="true")
+}
+
+///|
+test "define_with: the arity message uses the singular for 1" {
+  let reg = ParamTypeRegistry::default()
+  let message = try
+    reg.define2("pair", [RegexPattern("(a)")], (a, b) => a + b)
+  catch {
+    e => e.to_string()
+  } noraise {
+    _ => fail("expected an error")
+  }
+  inspect(
+    message,
+    content="The parameter type {pair} decodes 2 capture groups, but its regexps have 1 capture group",
+  )
 }
 
 ///|
