@@ -69,7 +69,7 @@ expr.match_("I have a dog") // matches
 
 ### Custom Parameter Types
 
-Register your own named parameter types with an optional transformer. The transformer gets the values of the capture groups of the regexp, or the whole match when the regexp has no capture groups. A group that did not match gives an empty string. Without a transformer, the value is `CustomVal` of the first of these values.
+Register your own named parameter types with an optional transformer. The transformer gets the values of the capture groups of the regexp, or the whole match when the regexp has no capture groups. A group that did not match gives an empty string. Without a transformer, the value is `StringVal` of the first of these values.
 
 `register` raises `ParameterTypeError` when the name is already registered, when the name has one of `{`, `}`, `(`, `)`, `\` or `/`, or when there are no regexps:
 
@@ -82,11 +82,11 @@ registry.register(
   @cucumber-expressions.ParamType::Custom("color"),
   [@cucumber-expressions.RegexPattern("red|green|blue")],
   transformer=@cucumber-expressions.Transformer::new(fn(groups) {
-    @cucumber-expressions.ParamValue::CustomVal(@any.of(groups[0]))
+    @cucumber-expressions.ParamValue::StringVal(groups[0].to_upper())
   }),
 )
 
-// Without transformer — defaults to CustomVal wrapping the raw string
+// Without transformer — gives StringVal of the match
 registry.register(
   "direction",
   @cucumber-expressions.ParamType::Custom("direction"),
@@ -98,8 +98,67 @@ let expr = @cucumber-expressions.Expression::parse_with_registry!(
   registry,
 )
 let m = expr.match_("the red ball").unwrap()
-// m.params[0].value => CustomVal(<Any>), m.params[0].raw => "red"
+// m.params[0].value => StringVal("RED"), m.params[0].raw => "red"
 ```
+
+### Typed Parameter Types
+
+A typed parameter type gives values of your own type, with no casts. Registration returns a `ParameterType[T]` handle; use it to read the value. Registration also checks the number of capture groups: a transformer with `n` arguments needs `n` top-level capture groups (added over all regexps), and a transformer with 1 argument also accepts a regexp with no groups (it then gets the whole match).
+
+#### `define1` to `define8`
+
+```moonbit skip nocheck
+let registry = @cucumber-expressions.ParamTypeRegistry::default()
+let color = registry.define1("color", [@cucumber-expressions.RegexPattern("red|green|blue")], Color::new)
+let coord = registry.define2("coord", [@cucumber-expressions.RegexPattern("(\\d+),(\\d+)")], (x, y) => {
+  Coord::new(@string.parse_int(x), @string.parse_int(y))
+})
+let expr = @cucumber-expressions.Expression::parse_with_registry("a {color} ball at {coord}", registry)
+let m = expr.match_("a red ball at 3,4").unwrap()
+let c : Color = color.get(m.params[0])  // raises if params[0] is not a {color}
+let p : Coord = m.get(coord)            // the only {coord} of the match
+let all : Array[Color] = m.get_all(color)
+```
+
+#### `Captures`: typed parts with `zip` and `map`
+
+`Captures` decodes each capture group with a typed part (`string()`, `int()`, `long()`, `float()`, `double()`, `custom(f)`, `optional(part)`). `zip` joins parts into a flat tuple, and `map` makes one value. Register it with `define_with`:
+
+```moonbit skip nocheck
+let seat = registry.define_with(
+  "seat",
+  [@cucumber-expressions.RegexPattern("(\\d+)-(\\w+)-(\\d+)")],
+  @cucumber-expressions.Captures::int()
+    .zip(@cucumber-expressions.Captures::string())
+    .zip(@cucumber-expressions.Captures::int())
+    .map((row, block, number) => Seat::new(row, block, number)),
+)
+```
+
+A group that did not match raises `GroupDidNotMatch`, unless its part is wrapped in `Captures::optional`, which gives `None`.
+
+`map` returns a decoder that can be zipped again, so large types are built from named parts:
+
+```moonbit skip nocheck
+let person = Captures::string().zip(Captures::string()).map((first, last) => Person::new(first, last))
+let customer = person.zip(address).zip(contact).map((p, a, c) => Customer::new(p, a, c))
+```
+
+After 8 values, `zip` folds the 8 values into one tuple and continues, so there is no hard limit.
+
+#### Traits: `ParameterTypeDef` and `FromGroups1` to `FromGroups8`
+
+```moonbit skip nocheck
+impl @cucumber-expressions.ParameterTypeDef for Color with name() { "color" }
+impl @cucumber-expressions.ParameterTypeDef for Color with regexps() {
+  [@cucumber-expressions.RegexPattern("red|green|blue")]
+}
+impl @cucumber-expressions.FromGroups1 for Color with from_groups(name) { Color::new(name) }
+
+let color : @cucumber-expressions.ParameterType[Color] = registry.define_type1()
+```
+
+`use_for_snippets` (default `true`) and `prefer_for_regexp_match` (default `false`) can be overridden in the `ParameterTypeDef` implementation.
 
 ### Regular Expressions
 
