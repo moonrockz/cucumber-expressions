@@ -250,6 +250,11 @@ pub suberror ParameterTypeError {
   AmbiguousParameter(name~ : String, count~ : Int)
   /// A capture group of a typed parameter type did not match.
   GroupDidNotMatch(name~ : String, index~ : Int)
+  /// The decoder of a typed parameter type takes a different number of
+  /// values than its regexps have capture groups.
+  ArityMismatch(name~ : String, expected~ : Int, groups~ : Int)
+  /// A regexp of a typed parameter type has parentheses that do not balance.
+  InvalidRegexp(name~ : String, regexp~ : String)
 } derive(Debug)
 
 ///|
@@ -273,6 +278,10 @@ pub fn ParameterTypeError::message(self : ParameterTypeError) -> String {
       "The match has \{count} parameters of type {\{name}}; use get_all"
     GroupDidNotMatch(name~, index~) =>
       "Capture group \{index} of the parameter type {\{name}} did not match"
+    ArityMismatch(name~, expected~, groups~) =>
+      "The parameter type {\{name}} decodes \{expected} capture groups, but its regexps have \{groups}"
+    InvalidRegexp(name~, regexp~) =>
+      "The regexp /\{regexp}/ of the parameter type {\{name}} has parentheses that do not balance"
   }
 }
 

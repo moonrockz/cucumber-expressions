@@ -136,9 +136,40 @@ pub fn[{", ".join(ps)}, X] Captures{n}::zip(
     return "".join(out)
 
 
+def gen_define_arity() -> str:
+    out = [HEADER]
+    for n in range(1, MAX_ARITY + 1):
+        arg_types = ", ".join(["String"] * n)
+        out.append(
+            f"""///|
+/// Register a typed parameter type whose transformer takes {n} capture
+/// group value{'s' if n > 1 else ''}. See `define_with` for the rules.
+pub fn[T] ParamTypeRegistry::define{n}(
+  self : ParamTypeRegistry,
+  name : String,
+  regexps : Array[RegexPattern],
+  transformer : ({arg_types}) -> T raise,
+  use_for_snippets? : Bool = true,
+  prefer_for_regexp_match? : Bool = false,
+) -> ParameterType[T] raise ParameterTypeError {{
+  self.define_with(
+    name,
+    regexps,
+    {string_chain(n)}.map(transformer),
+    use_for_snippets~,
+    prefer_for_regexp_match~,
+  )
+}}
+
+"""
+        )
+    return "".join(out)
+
+
 def main() -> None:
     outputs = {
         "src/captures_arity.mbt": gen_captures_arity(),
+        "src/define_arity.mbt": gen_define_arity(),
     }
     for path, text in outputs.items():
         (ROOT / path).write_text(text, encoding="utf-8")

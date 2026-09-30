@@ -53,6 +53,8 @@ pub suberror ParameterTypeError {
   MissingParameter(name~ : String)
   AmbiguousParameter(name~ : String, count~ : Int)
   GroupDidNotMatch(name~ : String, index~ : Int)
+  ArityMismatch(name~ : String, expected~ : Int, groups~ : Int)
+  InvalidRegexp(name~ : String, regexp~ : String)
 } derive(@debug.Debug)
 pub fn ParameterTypeError::message(Self) -> String
 pub fn ParameterTypeError::output(Self, &Logger) -> Unit
@@ -265,6 +267,15 @@ pub(all) struct ParamTypeRegistry {
   // private fields
 }
 pub fn ParamTypeRegistry::default() -> Self
+pub fn[T] ParamTypeRegistry::define1(Self, String, Array[RegexPattern], (String) -> T raise, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
+pub fn[T] ParamTypeRegistry::define2(Self, String, Array[RegexPattern], (String, String) -> T raise, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
+pub fn[T] ParamTypeRegistry::define3(Self, String, Array[RegexPattern], (String, String, String) -> T raise, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
+pub fn[T] ParamTypeRegistry::define4(Self, String, Array[RegexPattern], (String, String, String, String) -> T raise, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
+pub fn[T] ParamTypeRegistry::define5(Self, String, Array[RegexPattern], (String, String, String, String, String) -> T raise, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
+pub fn[T] ParamTypeRegistry::define6(Self, String, Array[RegexPattern], (String, String, String, String, String, String) -> T raise, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
+pub fn[T] ParamTypeRegistry::define7(Self, String, Array[RegexPattern], (String, String, String, String, String, String, String) -> T raise, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
+pub fn[T] ParamTypeRegistry::define8(Self, String, Array[RegexPattern], (String, String, String, String, String, String, String, String) -> T raise, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
+pub fn[T] ParamTypeRegistry::define_with(Self, String, Array[RegexPattern], Captures1[T], use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
 pub fn ParamTypeRegistry::entries_view(Self) -> ArrayView[ParamTypeEntry]
 pub fn ParamTypeRegistry::get(Self, String) -> ParamTypeEntry?
 pub fn ParamTypeRegistry::lookup_by_regexp(Self, String, String, String) -> ParamTypeEntry? raise AmbiguousParameterTypeError
