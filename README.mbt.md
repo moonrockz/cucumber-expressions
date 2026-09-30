@@ -109,7 +109,7 @@ match expr.match_("MoonBit is 1") {
 
 ## Error Handling
 
-`Expression::parse` raises `ExpressionError`, a suberror with these variants:
+`tokenize`, `parse_expression`, `compile_expression` and `Expression::parse` raise `ExpressionError`, a suberror with these variants:
 
 | Variant                | Cause                              |
 | ---------------------- | ---------------------------------- |
@@ -121,7 +121,7 @@ match expr.match_("MoonBit is 1") {
 | `UnknownParameterType` | Unregistered `{name}` in expression |
 
 Each error has `position()` (the code point offset of the problem) and
-`message()`. The message uses the same format as the reference
+`message()`. One error has no column: when the compiled regex does not compile, the position is 0 and the message gives the regex error. The message uses the same format as the reference
 implementation, for example:
 
 ```

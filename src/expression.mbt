@@ -42,11 +42,7 @@ pub fn Expression::parse_with_registry(
   let ast = parse_expression(expression)
   let compiled = compile_ast(expression, ast, registry)
   let tree_regexp = TreeRegexp::new(compiled.regex) catch {
-    _ =>
-      raise ExpressionError::ValidationError(
-        position=0,
-        message="Failed to compile regex: " + compiled.regex,
-      )
+    e => raise regex_does_not_compile_error(compiled.regex, e)
   }
   {
     source: expression,

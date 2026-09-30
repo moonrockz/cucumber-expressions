@@ -210,6 +210,20 @@ fn undefined_parameter_type_error(
 }
 
 ///|
+/// The compiled regex does not compile, for example because a parameter
+/// type has a regexp that is not valid. There is no column in the
+/// expression for this problem, so the position is 0.
+fn regex_does_not_compile_error(
+  regex : String,
+  error : @regexp.RegexpError,
+) -> ExpressionError {
+  ValidationError(
+    position=0,
+    message="The regex \{regex} of this Cucumber Expression does not compile: \{error}",
+  )
+}
+
+///|
 #deprecated
 pub extend ExpressionError with @debug.Debug::{to_repr}
 

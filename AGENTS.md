@@ -39,11 +39,13 @@ moonrockz/cucumber-expressions
 ### Processing Pipeline
 
 ```
-Expression string → tokenize() → Token[]
-                  → parse_expression() → AST (Node)
-                  → compile_expression() → regex string (checks the AST structure)
+Expression string → tokenize() → Token[]            (syntax errors)
+                  → parse_expression() → AST (Node)  (syntax errors)
+                  → compile_ast() → regex string      (structure errors)
                   → @regexp.compile() → Regexp
                   → Expression::match_() → Match?
+
+compile_expression(String) runs tokenize, parse_expression and compile_ast.
 ```
 
 ## Project Structure
