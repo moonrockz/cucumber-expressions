@@ -18,13 +18,12 @@ pub fn RegularExpression::new(
   regexp : String,
   registry? : ParamTypeRegistry = ParamTypeRegistry::default(),
 ) -> RegularExpression raise ExpressionError {
-  let tree_regexp = TreeRegexp::new(regexp) catch {
-    e =>
-      raise ExpressionError::ValidationError(
-        position=0,
-        message="Invalid regular expression /\{regexp}/: \{e}",
-      )
-  }
+  let tree_regexp = TreeRegexp::new(regexp, on_error=detail => {
+    ValidationError(
+      position=0,
+      message="Invalid regular expression /\{regexp}/: \{detail}",
+    )
+  })
   { tree_regexp, registry, }
 }
 

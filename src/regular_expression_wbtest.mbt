@@ -442,3 +442,16 @@ test "generator: does not use types with use_for_snippets false (#15, #18)" {
     content="When I go down the road",
   )
 }
+
+///|
+test "regular expression: a regex that does not compile (#16)" {
+  let message = try RegularExpression::new("a(b") catch {
+    e => e.message()
+  } noraise {
+    _ => fail("expected an error")
+  }
+  inspect(
+    message.has_prefix("Invalid regular expression /a(b/: "),
+    content="true",
+  )
+}

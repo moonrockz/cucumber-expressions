@@ -131,15 +131,18 @@ priv struct TreeRegexp {
 }
 
 ///|
-fn TreeRegexp::new(source : String) -> TreeRegexp raise ExpressionError {
+/// Compile a regex. `on_error` makes the error from a description of the
+/// problem.
+fn TreeRegexp::new(
+  source : String,
+  on_error~ : (String) -> ExpressionError,
+) -> TreeRegexp raise ExpressionError {
   let regexp = @regexp.compile(source.view()) catch {
-    e => raise regex_does_not_compile_error(source, e.to_string())
+    e => raise on_error(e.to_string())
   }
   guard create_group_builder(source) is Some(group_builder) &&
     group_builder.capture_count() == regexp.group_count() - 1 else {
-    raise regex_does_not_compile_error(
-      source, "the capture groups can not be found",
-    )
+    raise on_error("the capture groups can not be found")
   }
   { source, regexp, group_builder, }
 }
