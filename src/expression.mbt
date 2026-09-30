@@ -41,12 +41,13 @@ pub fn Expression::parse_with_registry(
 ) -> Expression raise ExpressionError {
   let ast = parse_expression(expression)
   let compiled = compile_ast(expression, ast, registry)
-  let tree_regexp = TreeRegexp::new(compiled.regex) catch {
-    _ =>
-      raise ExpressionError::ValidationError(
-        position=0,
-        message="Failed to compile regex: " + compiled.regex,
-      )
+  let tree_regexp = TreeRegexp::new(compiled.regex)
+  let groups = tree_regexp.group_builder.children.length()
+  if groups != compiled.parameter_types.length() {
+    raise regex_does_not_compile_error(
+      compiled.regex,
+      "it has \{groups} top-level capture groups, but \{compiled.parameter_types.length()} parameters",
+    )
   }
   {
     source: expression,
@@ -78,12 +79,6 @@ pub fn Expression::regexp(self : Expression) -> String {
 pub fn Expression::match_(self : Expression, text : String) -> Match? raise {
   guard self.tree_regexp.match_(text) is Some(group) else { return None }
   let arg_groups = group.children
-  if arg_groups.length() != self.parameter_types.length() {
-    raise ExpressionError::ValidationError(
-      position=0,
-      message="Group has \{arg_groups.length()} capture groups, but there were \{self.parameter_types.length()} parameter types",
-    )
-  }
   let params = self.parameter_types.mapi((i, entry) => {
     let group = arg_groups[i]
     let values = group.values().map(v => v.unwrap_or(""))
@@ -96,8 +91,13 @@ pub fn Expression::match_(self : Expression, text : String) -> Match? raise {
 ///|
 fn raw_text(type_ : ParamType, group : Group) -> String {
   let s = group.value.unwrap_or("")
+  let quoted = s.length() >= 2 &&
+    (
+      (s.has_prefix("\"") && s.has_suffix("\"")) ||
+      (s.has_prefix("'") && s.has_suffix("'"))
+    )
   match type_ {
-    String_ if s.length() >= 2 =>
+    String_ if quoted =>
       s.view(start_offset=1, end_offset=s.length() - 1).to_owned()
     _ => s
   }

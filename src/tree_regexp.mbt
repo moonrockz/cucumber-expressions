@@ -46,7 +46,7 @@ fn GroupBuilder::build(
   let index = next_index.val
   next_index.val = index + 1
   let children = self.children.map(child => child.build(results, next_index))
-  match results[index] {
+  match results.get(index).bind(x => x) {
     Some(view) => {
       let start = view.start_offset()
       {
@@ -75,7 +75,8 @@ fn is_non_capturing(source : Array[Char], i : Int) -> Bool {
 }
 
 ///|
-fn create_group_builder(source : String) -> GroupBuilder {
+/// Returns `None` when the parentheses are not balanced.
+fn create_group_builder(source : String) -> GroupBuilder? {
   let chars = source.to_array()
   let stack : Array[GroupBuilder] = [GroupBuilder::new()]
   let starts : Array[Int] = []
@@ -94,9 +95,10 @@ fn create_group_builder(source : String) -> GroupBuilder {
       starts.push(i)
       stack.push(builder)
     } else if c == ')' && !escaping && !char_class {
-      guard stack.pop() is Some(builder) else {
-        abort("unbalanced parentheses")
+      if stack.length() < 2 {
+        return None
       }
+      let builder = stack.unsafe_pop()
       let parent = stack[stack.length() - 1]
       let start = starts.pop().unwrap_or(0)
       if builder.capturing {
@@ -108,7 +110,16 @@ fn create_group_builder(source : String) -> GroupBuilder {
     }
     escaping = c == '\\' && !escaping
   }
-  stack[0]
+  if stack.length() != 1 {
+    return None
+  }
+  Some(stack[0])
+}
+
+///|
+/// The number of capture groups in the tree.
+fn GroupBuilder::capture_count(self : GroupBuilder) -> Int {
+  self.children.fold(init=0, (n, child) => n + 1 + child.capture_count())
 }
 
 ///|
@@ -120,12 +131,17 @@ priv struct TreeRegexp {
 }
 
 ///|
-fn TreeRegexp::new(source : String) -> TreeRegexp raise @regexp.RegexpError {
-  {
-    source,
-    regexp: @regexp.compile(source.view()),
-    group_builder: create_group_builder(source),
+fn TreeRegexp::new(source : String) -> TreeRegexp raise ExpressionError {
+  let regexp = @regexp.compile(source.view()) catch {
+    e => raise regex_does_not_compile_error(source, e.to_string())
   }
+  guard create_group_builder(source) is Some(group_builder) &&
+    group_builder.capture_count() == regexp.group_count() - 1 else {
+    raise regex_does_not_compile_error(
+      source, "the capture groups can not be found",
+    )
+  }
+  { source, regexp, group_builder, }
 }
 
 ///|

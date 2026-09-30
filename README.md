@@ -69,7 +69,7 @@ expr.match_("I have a dog") // matches
 
 ### Custom Parameter Types
 
-Register your own named parameter types with an optional transformer. The transformer gets the values of the capture groups of the regexp, or the whole match when the regexp has no capture groups. A group that did not match gives an empty string.
+Register your own named parameter types with an optional transformer. The transformer gets the values of the capture groups of the regexp, or the whole match when the regexp has no capture groups. A group that did not match gives an empty string. Without a transformer, the value is `CustomVal` of the first of these values.
 
 `register` raises `ParameterTypeError` when the name is already registered, when the name has one of `{`, `}`, `(`, `)`, `\` or `/`, or when there are no regexps:
 
@@ -134,7 +134,7 @@ let generated = generator.generate_expressions("I have 2 cucumbers and 1.5 tomat
 
 ### Error Handling
 
-`Expression::parse` and `compile_expression` raise `ExpressionError`:
+`tokenize`, `parse_expression`, `compile_expression` and `Expression::parse` raise `ExpressionError`. `tokenize` and `parse_expression` raise only the syntax errors; the structure errors come when the expression compiles:
 
 | Variant                | Cause                                                         |
 | ---------------------- | ------------------------------------------------------------- |
@@ -146,7 +146,7 @@ let generated = generator.generate_expressions("I have 2 cucumbers and 1.5 tomat
 | `UnknownParameterType` | Unregistered `{name}` in expression                           |
 
 Each error has `position()` (the code point offset of the problem) and
-`message()`. The message uses the same format as the reference
+`message()`. One error has no column: when the compiled regex does not compile (for example because a custom parameter type has a regexp that is not valid), the position is 0 and the message gives the regex error. The message uses the same format as the reference
 implementation, for example:
 
 ```

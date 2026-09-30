@@ -510,3 +510,63 @@ test "spec/error: unknown parameter type has name and position" {
   inspect(name, content="color")
   inspect(position, content="2")
 }
+
+///|
+test "spec/tokenizer: positions count code points, not UTF-16 units" {
+  let tokens = tokenize("😀 {int}")
+  debug_inspect(
+    tokens.map(t => (t.type_, t.start, t.end)),
+    content=(
+      #|[
+      #|  (StartOfLine, 0, 0),
+      #|  (Text, 0, 1),
+      #|  (WhiteSpace, 1, 2),
+      #|  (BeginParameter, 2, 3),
+      #|  (Text, 3, 6),
+      #|  (EndParameter, 6, 7),
+      #|  (EndOfLine, 7, 7),
+      #|]
+    ),
+  )
+}
+
+///|
+test "spec/error: column counts code points, not UTF-16 units" {
+  let err = try compile_expression("😀 (a") catch {
+    e => e
+  } noraise {
+    _ => fail("expected an error")
+  }
+  inspect(err.position(), content="2")
+  inspect(
+    err.message(),
+    content=(
+      #|This Cucumber Expression has a problem at column 3:
+      #|
+      #|😀 (a
+      #|  ^
+      #|The '(' does not have a matching ')'.
+      #|If you did not intend to use optional text you can use '\(' to escape the optional text
+    ),
+  )
+}
+
+///|
+test "spec/error: a parameter regexp that does not compile" {
+  let reg = ParamTypeRegistry::default()
+  reg.register("bad", Custom("bad"), [RegexPattern("a{2")])
+  let err = try Expression::parse_with_registry("x {bad}", reg) catch {
+    e => e
+  } noraise {
+    _ => fail("expected an error")
+  }
+  inspect(err.position(), content="0")
+  inspect(
+    err
+    .message()
+    .has_prefix(
+      "The regex ^x (a{2)$ of this Cucumber Expression does not compile: ",
+    ),
+    content="true",
+  )
+}
