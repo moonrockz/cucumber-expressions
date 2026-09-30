@@ -455,3 +455,28 @@ test "regular expression: a regex that does not compile (#16)" {
     content="true",
   )
 }
+
+///|
+test "generator: escaped brace before a parameter (#18)" {
+  let (reg, gen) = generator()
+  let generated = gen.generate_expressions("a {5")
+  inspect(generated[0].source(), content="a \\{{int}")
+  let expr = Expression::parse_with_registry(generated[0].source(), reg)
+  inspect(expr.match_("a {5") is Some(_), content="true")
+}
+
+///|
+test "generator: a tab is not a word boundary (#18)" {
+  let (_, gen) = generator()
+  inspect(gen.generate_expressions("a\t5 b")[0].source(), content="a\t5 b")
+  inspect(gen.generate_expressions("a 5\tb")[0].source(), content="a 5\tb")
+}
+
+///|
+test "regular expression: the float regexp gives {double}, as in Java (#15)" {
+  let float_regexp = "[-+]?(?:\\d+(?:\\.\\d+)?|\\.\\d+)(?:[eE][+-]?\\d+)?"
+  debug_inspect(
+    regex_values("^I have (\{float_regexp}) cukes$", "I have 2.5 cukes"),
+    content="Some([\"DoubleVal(2.5)\"])",
+  )
+}

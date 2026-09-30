@@ -111,7 +111,7 @@ let m = expr.match_("I have 3 cukes in my belly").unwrap()
 // m.params[0].value => IntVal(3), m.params[1].value => AnonymousVal("belly")
 ```
 
-When more than one parameter type has the regexp of a group, `match_` raises `AmbiguousParameterTypeError`. Give one of the types `prefer_for_regexp_match=true` in `register` to fix this.
+When more than one parameter type has the regexp of a group, `match_` raises `AmbiguousParameterTypeError`. Give one of the types `prefer_for_regexp_match=true` in `register` to fix this. The built-in `{int}`, `{double}` and `{}` are preferential, so `(\d+)` gives `{int}` and a group with the float regexp gives `{double}`, the same as the Java implementation.
 
 `ExpressionFactory` makes a `StepExpression` from a string. A string that starts with `^` or ends with `$`, or that starts and ends with `/`, is a regular expression. All other strings are Cucumber Expressions.
 

@@ -142,7 +142,7 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
       DoubleVal(@string.parse_double(groups[0]))
     }),
     use_for_snippets=false,
-    prefer_for_regexp_match=false,
+    prefer_for_regexp_match=true,
   )
   reg.add_entry(
     "bigdecimal",

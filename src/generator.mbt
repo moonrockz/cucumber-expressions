@@ -20,7 +20,9 @@ pub fn CucumberExpressionGenerator::new(
 ///|
 /// A Cucumber Expression made by `CucumberExpressionGenerator`.
 pub(all) struct GeneratedExpression {
-  priv template : String
+  /// The escaped text around the parameters: one more than the number of
+  /// parameters.
+  priv texts : Array[String]
   parameter_types : Array[ParamTypeEntry]
 }
 
@@ -37,24 +39,12 @@ pub(all) struct ParameterInfo {
 ///|
 /// The text of the generated expression.
 pub fn GeneratedExpression::source(self : GeneratedExpression) -> String {
-  // The template has `{{n}}` for parameter n; all other text is escaped.
   let buf = StringBuilder()
-  let chars = self.template.to_array()
-  let mut i = 0
-  while i < chars.length() {
-    if chars[i] == '{' && i + 1 < chars.length() && chars[i + 1] == '{' {
-      let close = chars[i + 2:].search('}').unwrap() + i + 2
-      let index = @string.parse_int(String::from_array(chars[i + 2:close])) catch {
-        _ => abort("bad template")
-      }
-      buf.write_char('{')
-      buf.write_string(self.parameter_types[index].name)
-      buf.write_char('}')
-      i = close + 2
-    } else {
-      buf.write_char(chars[i])
-      i = i + 1
+  for i, text in self.texts {
+    if i > 0 {
+      buf.write_string("{\{self.parameter_types[i - 1].name}}")
     }
+    buf.write_string(text)
   }
   buf.to_string()
 }
@@ -95,9 +85,8 @@ pub fn CucumberExpressionGenerator::generate_expressions(
 ) -> Array[GeneratedExpression] {
   let combinations : Array[Array[ParamTypeEntry]] = []
   let matchers = self.create_parameter_type_matchers(text)
-  let template = StringBuilder()
+  let texts : Array[String] = []
   let mut pos = 0
-  let mut counter = 0
   while true {
     let matching = matchers.map(m => m.advance_to(pos)).filter(m => m.find())
     if matching.is_empty() {
@@ -114,25 +103,20 @@ pub fn CucumberExpressionGenerator::generate_expressions(
     }
     types.sort_by(compare_parameter_types)
     combinations.push(types)
-    template.write_string(
-      escape_text(text.view(start_offset=pos, end_offset=best.start)),
-    )
-    template.write_string("{{\{counter}}}")
-    counter = counter + 1
+    texts.push(escape_text(text.view(start_offset=pos, end_offset=best.start)))
     pos = best.start + best.length
     if pos >= text.length() {
       break
     }
   }
-  template.write_string(escape_text(text.view(start_offset=pos)))
-  let template = template.to_string()
+  texts.push(escape_text(text.view(start_offset=pos)))
   let expressions : Array[GeneratedExpression] = []
   fn permute(depth : Int, current : Array[ParamTypeEntry]) -> Unit {
     if expressions.length() >= max_generated_expressions {
       return
     }
     if depth == combinations.length() {
-      expressions.push({ template, parameter_types: current, })
+      expressions.push({ texts, parameter_types: current, })
       return
     }
     for entry in combinations[depth] {
@@ -260,7 +244,8 @@ fn compare_matchers(a : ParameterTypeMatcher, b : ParameterTypeMatcher) -> Int {
 fn is_word_boundary(c : UInt16) -> Bool {
   let ch = c.to_int().unsafe_to_char()
   if ch.is_ascii() {
-    return ch.is_ascii_whitespace() || ch.is_ascii_punctuation()
+    // Z in ASCII is only the space; P and S are the ASCII punctuation.
+    return ch == ' ' || ch.is_ascii_punctuation()
   }
   word_boundary_regexp.execute(ch.to_string()).matched()
 }
