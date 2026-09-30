@@ -63,10 +63,8 @@ pub fn RegularExpression::match_(
     let raw = arg_group.value.unwrap_or("")
     let (value, type_) = match (entry, arg_group.value) {
       (_, None) => (NullVal, entry.map(e => e.type_).unwrap_or(Anonymous))
-      (Some(entry), Some(_)) => {
-        let values = arg_group.values().map(v => v.unwrap_or(""))
-        (entry.transformer.call(values), entry.type_)
-      }
+      (Some(entry), Some(_)) =>
+        (entry.transformer.call_with_missing(arg_group.values()), entry.type_)
       (None, Some(_)) =>
         (AnonymousVal(arg_group.values()[0].unwrap_or("")), Anonymous)
     }

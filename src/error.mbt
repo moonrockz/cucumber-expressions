@@ -242,6 +242,12 @@ pub suberror ParameterTypeError {
     first~ : String,
     second~ : String
   )
+  /// A typed handle was used on a parameter of another type.
+  WrongParameterType(expected~ : String, actual~ : String)
+  /// No parameter of the match has the type of the handle.
+  MissingParameter(name~ : String)
+  /// More than one parameter of the match has the type of the handle.
+  AmbiguousParameter(name~ : String, count~ : Int)
 } derive(Debug)
 
 ///|
@@ -258,6 +264,11 @@ pub fn ParameterTypeError::message(self : ParameterTypeError) -> String {
       "The parameter type {\{name}} must have at least one regexp"
     DuplicatePreferentialParameterType(regexp~, first~, second~) =>
       "There can only be one preferential parameter type per regexp. The regexp /\{regexp}/ is used for two preferential parameter types, {\{first}} and {\{second}}"
+    WrongParameterType(expected~, actual~) =>
+      "Expected a parameter of type {\{expected}}, but the parameter has type {\{actual}}"
+    MissingParameter(name~) => "The match has no parameter of type {\{name}}"
+    AmbiguousParameter(name~, count~) =>
+      "The match has \{count} parameters of type {\{name}}; use get_all"
   }
 }
 

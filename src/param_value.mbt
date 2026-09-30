@@ -16,6 +16,9 @@ pub(all) enum ParamValue {
   /// The capture group did not match. Only a `RegularExpression` with an
   /// optional group gives this value.
   NullVal
+  /// The value of a typed parameter type. Read it with the
+  /// `ParameterType[T]` handle of the type.
+  TypedVal(TypedValue)
 }
 
 ///|
@@ -33,6 +36,7 @@ pub impl Show for ParamValue with fn output(self, logger) {
     BigDecimalVal(v) => logger.write_string("BigDecimalVal(\{v})")
     BigIntegerVal(v) => logger.write_string("BigIntegerVal(\{v})")
     NullVal => logger.write_string("NullVal")
+    TypedVal(v) => logger.write_string("TypedVal(<\{v.type_name()}>)")
   }
 }
 
@@ -56,6 +60,10 @@ pub impl @debug.Debug for ParamValue with fn to_repr(self) {
     BigIntegerVal(v) =>
       @debug.Repr::ctor("BigIntegerVal", [(None, @debug.Repr(v))])
     NullVal => @debug.Repr::literal("NullVal")
+    TypedVal(v) =>
+      @debug.Repr::ctor("TypedVal", [
+        (None, @debug.Repr::literal("<\{v.type_name()}>")),
+      ])
   }
 }
 
@@ -74,6 +82,7 @@ pub impl Eq for ParamValue with fn equal(self, other) -> Bool {
     (BigDecimalVal(a), BigDecimalVal(b)) => a == b
     (BigIntegerVal(a), BigIntegerVal(b)) => a == b
     (NullVal, NullVal) => true
+    (TypedVal(a), TypedVal(b)) => physical_equal(a, b)
     _ => false
   }
 }
@@ -83,13 +92,37 @@ pub impl Eq for ParamValue with fn equal(self, other) -> Bool {
 /// Receives an array of captured group strings (arity matches capture groups in the regex).
 pub(all) struct Transformer {
   priv f : (Array[String]) -> ParamValue raise Error
+  /// Set for typed parameter types, which must see groups that did not
+  /// match as `None`.
+  priv with_missing : ((Array[String?]) -> ParamValue raise Error)?
 }
 
 ///|
 pub fn Transformer::new(
   f : (Array[String]) -> ParamValue raise Error,
 ) -> Transformer {
-  { f, }
+  { f, with_missing: None, }
+}
+
+///|
+/// A transformer that gets `None` for a capture group that did not match.
+fn Transformer::with_missing(
+  f : (Array[String?]) -> ParamValue raise Error,
+) -> Transformer {
+  { f: values => f(values.map(v => Some(v))), with_missing: Some(f), }
+}
+
+///|
+/// Call the transformer with the values of the capture groups. A group that
+/// did not match is `None`; a plain transformer gets `""` for it.
+fn Transformer::call_with_missing(
+  self : Transformer,
+  values : Array[String?],
+) -> ParamValue raise Error {
+  match self.with_missing {
+    Some(f) => f(values)
+    None => (self.f)(values.map(v => v.unwrap_or("")))
+  }
 }
 
 ///|

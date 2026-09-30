@@ -49,6 +49,9 @@ pub suberror ParameterTypeError {
   IllegalParameterName(name~ : String)
   NoRegexps(name~ : String)
   DuplicatePreferentialParameterType(regexp~ : String, first~ : String, second~ : String)
+  WrongParameterType(expected~ : String, actual~ : String)
+  MissingParameter(name~ : String)
+  AmbiguousParameter(name~ : String, count~ : Int)
 } derive(@debug.Debug)
 pub fn ParameterTypeError::message(Self) -> String
 pub fn ParameterTypeError::output(Self, &Logger) -> Unit
@@ -106,6 +109,8 @@ pub(all) struct Match {
 } derive(Eq, @debug.Debug)
 #deprecated
 pub fn Match::equal(Self, Self) -> Bool
+pub fn[T] Match::get(Self, ParameterType[T]) -> T raise ParameterTypeError
+pub fn[T] Match::get_all(Self, ParameterType[T]) -> Array[T]
 #deprecated
 pub fn Match::not_equal(Self, Self) -> Bool
 #deprecated
@@ -220,6 +225,7 @@ pub(all) enum ParamValue {
   BigDecimalVal(@decimal.Decimal)
   BigIntegerVal(@bigint.BigInt)
   NullVal
+  TypedVal(TypedValue)
 }
 #deprecated
 pub fn ParamValue::equal(Self, Self) -> Bool
@@ -244,6 +250,12 @@ pub fn ParameterInfo::equal(Self, Self) -> Bool
 pub fn ParameterInfo::not_equal(Self, Self) -> Bool
 #deprecated
 pub fn ParameterInfo::to_repr(Self) -> @debug.Repr
+
+pub struct ParameterType[T] {
+  // private fields
+}
+pub fn[T] ParameterType::get(Self[T], Param) -> T raise ParameterTypeError
+pub fn[T] ParameterType::name(Self[T]) -> String
 
 pub(all) struct RegexPattern {
   // private fields
@@ -315,6 +327,11 @@ pub fn Transformer::new((Array[String]) -> ParamValue raise) -> Self
 #deprecated
 pub fn Transformer::to_repr(Self) -> @debug.Repr
 pub impl @debug.Debug for Transformer
+
+pub struct TypedValue {
+  // private fields
+}
+pub fn TypedValue::type_name(Self) -> String
 
 // Type aliases
 
