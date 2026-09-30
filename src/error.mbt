@@ -215,7 +215,7 @@ fn undefined_parameter_type_error(
 /// expression for this problem, so the position is 0.
 fn regex_does_not_compile_error(
   regex : String,
-  error : @regexp.RegexpError,
+  error : String,
 ) -> ExpressionError {
   ValidationError(
     position=0,

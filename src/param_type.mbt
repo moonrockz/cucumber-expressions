@@ -242,7 +242,9 @@ fn parse_int_in_range(
 ) -> Int raise {
   let n = @string.parse_int(text)
   if n < min || n > max {
-    fail("\{text} is out of range for {\{type_name}}: \{min}..\{max}")
+    raise Failure::Failure(
+      "\{text} is out of range for {\{type_name}}: \{min}..\{max}",
+    )
   }
   n
 }

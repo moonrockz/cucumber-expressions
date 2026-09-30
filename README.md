@@ -69,7 +69,7 @@ expr.match_("I have a dog") // matches
 
 ### Custom Parameter Types
 
-Register your own named parameter types with an optional transformer. The transformer gets the values of the capture groups of the regexp, or the whole match when the regexp has no capture groups. A group that did not match gives an empty string.
+Register your own named parameter types with an optional transformer. The transformer gets the values of the capture groups of the regexp, or the whole match when the regexp has no capture groups. A group that did not match gives an empty string. Without a transformer, the value is `CustomVal` of the first of these values.
 
 `register` raises `ParameterTypeError` when the name is already registered, when the name has one of `{`, `}`, `(`, `)`, `\` or `/`, or when there are no regexps:
 

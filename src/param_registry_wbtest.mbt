@@ -232,3 +232,51 @@ test "expression gives the compiled regexp (#19)" {
     ),
   )
 }
+
+///|
+test "raw keeps the text of a String_ type that has no quotes" {
+  let reg = ParamTypeRegistry::new()
+  reg.register("text", String_, [RegexPattern("\\w+")])
+  let expr = Expression::parse_with_registry("{text}", reg)
+  guard expr.match_("hello") is Some(m) else { fail("expected a match") }
+  inspect(m.params[0].raw, content="hello")
+}
+
+///|
+test "raw removes the quotes of a quoted string" {
+  let expr = Expression::parse("{string}")
+  guard expr.match_("'a b'") is Some(m) else { fail("expected a match") }
+  inspect(m.params[0].raw, content="a b")
+}
+
+///|
+test "group builder gives None for unbalanced parentheses" {
+  inspect(create_group_builder("a)") is None, content="true")
+  inspect(create_group_builder("(a") is None, content="true")
+  inspect(create_group_builder("[)](a)") is Some(_), content="true")
+}
+
+///|
+test "group builder does not panic when the match has fewer groups" {
+  guard create_group_builder("(a)(b)") is Some(builder) else {
+    fail("expected a builder")
+  }
+  let group = builder.build([Some("ab"[:]), Some("a"[:])], { val: 0, })
+  debug_inspect(group.children[1].value, content="None")
+}
+
+///|
+test "range error message has no source location (#11)" {
+  let expr = Expression::parse("{byte}")
+  let message = try expr.match_("128") catch {
+    e => e.to_string()
+  } noraise {
+    _ => fail("expected an error")
+  }
+  inspect(
+    message,
+    content=(
+      #|Failure(128 is out of range for {byte}: -128..127)
+    ),
+  )
+}
