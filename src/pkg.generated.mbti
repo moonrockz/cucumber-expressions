@@ -275,6 +275,14 @@ pub fn[T] ParamTypeRegistry::define5(Self, String, Array[RegexPattern], (String,
 pub fn[T] ParamTypeRegistry::define6(Self, String, Array[RegexPattern], (String, String, String, String, String, String) -> T raise, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
 pub fn[T] ParamTypeRegistry::define7(Self, String, Array[RegexPattern], (String, String, String, String, String, String, String) -> T raise, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
 pub fn[T] ParamTypeRegistry::define8(Self, String, Array[RegexPattern], (String, String, String, String, String, String, String, String) -> T raise, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
+pub fn[T : ParameterTypeDef + FromGroups1] ParamTypeRegistry::define_type1(Self) -> ParameterType[T] raise ParameterTypeError
+pub fn[T : ParameterTypeDef + FromGroups2] ParamTypeRegistry::define_type2(Self) -> ParameterType[T] raise ParameterTypeError
+pub fn[T : ParameterTypeDef + FromGroups3] ParamTypeRegistry::define_type3(Self) -> ParameterType[T] raise ParameterTypeError
+pub fn[T : ParameterTypeDef + FromGroups4] ParamTypeRegistry::define_type4(Self) -> ParameterType[T] raise ParameterTypeError
+pub fn[T : ParameterTypeDef + FromGroups5] ParamTypeRegistry::define_type5(Self) -> ParameterType[T] raise ParameterTypeError
+pub fn[T : ParameterTypeDef + FromGroups6] ParamTypeRegistry::define_type6(Self) -> ParameterType[T] raise ParameterTypeError
+pub fn[T : ParameterTypeDef + FromGroups7] ParamTypeRegistry::define_type7(Self) -> ParameterType[T] raise ParameterTypeError
+pub fn[T : ParameterTypeDef + FromGroups8] ParamTypeRegistry::define_type8(Self) -> ParameterType[T] raise ParameterTypeError
 pub fn[T] ParamTypeRegistry::define_with(Self, String, Array[RegexPattern], Captures1[T], use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
 pub fn ParamTypeRegistry::entries_view(Self) -> ArrayView[ParamTypeEntry]
 pub fn ParamTypeRegistry::get(Self, String) -> ParamTypeEntry?
@@ -406,3 +414,41 @@ pub fn TypedValue::type_name(Self) -> String
 // Type aliases
 
 // Traits
+pub(open) trait FromGroups1 {
+  fn from_groups(String) -> Self raise
+}
+
+pub(open) trait FromGroups2 {
+  fn from_groups(String, String) -> Self raise
+}
+
+pub(open) trait FromGroups3 {
+  fn from_groups(String, String, String) -> Self raise
+}
+
+pub(open) trait FromGroups4 {
+  fn from_groups(String, String, String, String) -> Self raise
+}
+
+pub(open) trait FromGroups5 {
+  fn from_groups(String, String, String, String, String) -> Self raise
+}
+
+pub(open) trait FromGroups6 {
+  fn from_groups(String, String, String, String, String, String) -> Self raise
+}
+
+pub(open) trait FromGroups7 {
+  fn from_groups(String, String, String, String, String, String, String) -> Self raise
+}
+
+pub(open) trait FromGroups8 {
+  fn from_groups(String, String, String, String, String, String, String, String) -> Self raise
+}
+
+pub(open) trait ParameterTypeDef {
+  fn name() -> String
+  fn regexps() -> Array[RegexPattern]
+  fn use_for_snippets() -> Bool = _
+  fn prefer_for_regexp_match() -> Bool = _
+}

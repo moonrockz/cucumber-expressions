@@ -166,10 +166,99 @@ pub fn[T] ParamTypeRegistry::define{n}(
     return "".join(out)
 
 
+def gen_parameter_type_def() -> str:
+    out = [HEADER]
+    out.append(
+        """///|
+/// A typed parameter type defined by the type itself. Implement it and one
+/// of `FromGroups1` to `FromGroups8`, then register the type with
+/// `define_type1` to `define_type8`.
+pub(open) trait ParameterTypeDef {
+  /// The name used in expressions, for example "color" for `{color}`.
+  name() -> String
+  /// The regexps that match the parameter.
+  regexps() -> Array[RegexPattern]
+  /// Default: `true`.
+  use_for_snippets() -> Bool = _
+  /// Default: `false`.
+  prefer_for_regexp_match() -> Bool = _
+}
+
+///|
+impl ParameterTypeDef with use_for_snippets() {
+  true
+}
+
+///|
+impl ParameterTypeDef with prefer_for_regexp_match() {
+  false
+}
+
+///|
+priv struct TypeDef {
+  name : String
+  regexps : Array[RegexPattern]
+  use_for_snippets : Bool
+  prefer_for_regexp_match : Bool
+}
+
+///|
+/// Read the definition of `T`. The argument only selects `T`.
+fn[T : ParameterTypeDef] type_def(_proxy : T?) -> TypeDef {
+  {
+    name: T::name(),
+    regexps: T::regexps(),
+    use_for_snippets: T::use_for_snippets(),
+    prefer_for_regexp_match: T::prefer_for_regexp_match(),
+  }
+}
+
+"""
+    )
+    for n in range(1, MAX_ARITY + 1):
+        arg_types = ", ".join(["String"] * n)
+        names = ", ".join(f"g{i + 1}" for i in range(n))
+        typed_args = ", ".join(f"g{i + 1} : String" for i in range(n))
+        out.append(
+            f"""///|
+/// Make a value from {n} capture group value{'s' if n > 1 else ''}.
+pub(open) trait FromGroups{n} {{
+  from_groups({arg_types}) -> Self raise
+}}
+
+///|
+fn[T : FromGroups{n}] from_groups{n}({typed_args}) -> T raise {{
+  T::from_groups({names})
+}}
+
+///|
+/// Register the typed parameter type `T`, which takes {n} capture group
+/// value{'s' if n > 1 else ''}. Select `T` with a type annotation, for example
+/// `let color : ParameterType[Color] = registry.define_type{n}()`.
+pub fn[T : ParameterTypeDef + FromGroups{n}] ParamTypeRegistry::define_type{n}(
+  self : ParamTypeRegistry,
+) -> ParameterType[T] raise ParameterTypeError {{
+  let def = type_def((None : T?))
+  let captures : Captures1[T] = {string_chain(n)}.map(({names}) => from_groups{n}({names}))
+  self.define_with(
+    def.name,
+    def.regexps,
+    captures,
+    use_for_snippets=def.use_for_snippets,
+    prefer_for_regexp_match=def.prefer_for_regexp_match,
+  )
+}}
+
+"""
+        )
+    return "".join(out)
+
+
 def main() -> None:
     outputs = {
         "src/captures_arity.mbt": gen_captures_arity(),
         "src/define_arity.mbt": gen_define_arity(),
+        "src/parameter_type_def.mbt": gen_parameter_type_def(),
     }
     for path, text in outputs.items():
         (ROOT / path).write_text(text, encoding="utf-8")
