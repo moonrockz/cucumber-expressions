@@ -35,14 +35,41 @@ pub fn ExpressionError::to_repr(Self) -> @debug.Repr
 pub fn ExpressionError::to_string(Self) -> String
 pub impl Show for ExpressionError
 
+pub suberror ParameterTypeError {
+  DuplicateParameterType(name~ : String)
+  IllegalParameterName(name~ : String)
+  NoRegexps(name~ : String)
+} derive(@debug.Debug)
+pub fn ParameterTypeError::message(Self) -> String
+pub fn ParameterTypeError::output(Self, &Logger) -> Unit
+#deprecated
+pub fn ParameterTypeError::to_repr(Self) -> @debug.Repr
+pub fn ParameterTypeError::to_string(Self) -> String
+pub impl Show for ParameterTypeError
+
 // Types and methods
 pub(all) struct Expression {
   // private fields
 }
-pub fn Expression::match_(Self, String) -> Match?
+pub fn Expression::match_(Self, String) -> Match? raise
 pub fn Expression::parse(String) -> Self raise ExpressionError
 pub fn Expression::parse_with_registry(String, ParamTypeRegistry) -> Self raise ExpressionError
+pub fn Expression::regexp(Self) -> String
 pub fn Expression::source(Self) -> String
+
+pub(all) struct Group {
+  value : String?
+  start : Int?
+  end : Int?
+  children : Array[Group]
+} derive(Eq, @debug.Debug)
+#deprecated
+pub fn Group::equal(Self, Self) -> Bool
+#deprecated
+pub fn Group::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn Group::to_repr(Self) -> @debug.Repr
+pub fn Group::values(Self) -> Array[String?]
 
 pub(all) struct Match {
   params : Array[Param]
@@ -92,6 +119,7 @@ pub(all) struct Param {
   value : ParamValue
   type_ : ParamType
   raw : String
+  group : Group
 } derive(Eq, @debug.Debug)
 #deprecated
 pub fn Param::equal(Self, Self) -> Bool
@@ -144,7 +172,7 @@ pub fn ParamTypeRegistry::default() -> Self
 pub fn ParamTypeRegistry::entries_view(Self) -> ArrayView[ParamTypeEntry]
 pub fn ParamTypeRegistry::get(Self, String) -> ParamTypeEntry?
 pub fn ParamTypeRegistry::new() -> Self
-pub fn ParamTypeRegistry::register(Self, String, ParamType, Array[RegexPattern], transformer? : Transformer) -> Unit
+pub fn ParamTypeRegistry::register(Self, String, ParamType, Array[RegexPattern], transformer? : Transformer) -> Unit raise ParameterTypeError
 
 pub(all) enum ParamValue {
   IntVal(Int)

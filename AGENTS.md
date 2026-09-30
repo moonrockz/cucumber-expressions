@@ -43,9 +43,10 @@ Expression string → tokenize() → Token[]            (syntax errors)
                   → parse_expression() → AST (Node)  (syntax errors)
                   → compile_ast() → regex string      (structure errors)
                   → @regexp.compile() → Regexp
-                  → Expression::match_() → Match?
+                  → Expression::match_() → Match? (raises the error of a transformer)
 
 compile_expression(String) runs tokenize, parse_expression and compile_ast.
+ParamTypeRegistry::register raises ParameterTypeError.
 ```
 
 ## Project Structure

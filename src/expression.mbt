@@ -2,12 +2,8 @@
 /// A parsed and compiled cucumber expression, ready for matching.
 pub(all) struct Expression {
   priv source : String
-  priv regex : @regexp.Regexp
-  priv param_types : Array[ParamType]
-  priv transformers : Array[Transformer]
-  /// For each parameter, the number of capture groups its regex pattern uses.
-  /// This is needed because {string} uses multiple inner capture groups.
-  priv group_counts : Array[Int]
+  priv tree_regexp : TreeRegexp
+  priv parameter_types : Array[ParamTypeEntry]
 }
 
 ///|
@@ -18,10 +14,15 @@ pub(all) struct Match {
 
 ///|
 /// An extracted parameter value.
+///
+/// `raw` is the matched text. For `{string}` it is the text between the
+/// quotes, before the escaped quotes are changed. `group` is the capture
+/// group of the parameter, with its position and the groups inside it.
 pub(all) struct Param {
   value : ParamValue
   type_ : ParamType
   raw : String
+  group : Group
 } derive(Debug, Eq)
 
 ///|
@@ -40,16 +41,19 @@ pub fn Expression::parse_with_registry(
 ) -> Expression raise ExpressionError {
   let ast = parse_expression(expression)
   let compiled = compile_ast(expression, ast, registry)
-  let regex_str = compiled.regex
-  let param_types = compiled.parameter_types.map(e => e.type_)
-  let transformers = compiled.parameter_types.map(e => e.transformer)
-  let group_counts = compiled.parameter_types.map(e => {
-    count_capture_groups(e.patterns)
-  })
-  let regex = @regexp.compile(regex_str.view()) catch {
-    e => raise regex_does_not_compile_error(regex_str, e)
+  let tree_regexp = TreeRegexp::new(compiled.regex)
+  let groups = tree_regexp.group_builder.children.length()
+  if groups != compiled.parameter_types.length() {
+    raise regex_does_not_compile_error(
+      compiled.regex,
+      "it has \{groups} top-level capture groups, but \{compiled.parameter_types.length()} parameters",
+    )
   }
-  { source: expression, regex, param_types, transformers, group_counts, }
+  {
+    source: expression,
+    tree_regexp,
+    parameter_types: compiled.parameter_types,
+  }
 }
 
 ///|
@@ -59,88 +63,44 @@ pub fn Expression::source(self : Expression) -> String {
 }
 
 ///|
+/// Get the regex that this expression compiles to.
+pub fn Expression::regexp(self : Expression) -> String {
+  self.tree_regexp.source
+}
+
+///|
 /// Match this expression against a text string.
-/// Returns Some(Match) with extracted parameters, or None if no match.
-pub fn Expression::match_(self : Expression, text : String) -> Match? {
-  let result = self.regex.match_(text.view())
-  guard result is Some(mr) else { return None }
-  let params : Array[Param] = []
-  let mut group_idx = 1 // group 0 is full match
-  for i, type_ in self.param_types {
-    let num_groups = self.group_counts[i]
-    let raw_value = match type_ {
-      ParamType::String_ => {
-        // {string} has multiple capture groups. The outer group (group_idx)
-        // captures the full match including quotes. Inner groups capture content.
-        // We use the outer group and strip quotes.
-        let outer = mr.get(group_idx)
-        match outer {
-          Some(sv) => {
-            let s = sv.to_owned()
-            if (s.has_prefix("\"") && s.has_suffix("\"")) ||
-              (s.has_prefix("'") && s.has_suffix("'")) {
-              s.view(start_offset=1, end_offset=s.length() - 1).to_owned()
-            } else {
-              s
-            }
-          }
-          None => ""
-        }
-      }
-      _ =>
-        match mr.get(group_idx) {
-          Some(sv) => sv.to_owned()
-          None => ""
-        }
-    }
-    // Apply transformer to get typed value
-    let transformed = self.transformers[i].call([raw_value]) catch {
-      _ => ParamValue::AnonymousVal(raw_value)
-    }
-    params.push({ value: transformed, type_, raw: raw_value, })
-    group_idx = group_idx + num_groups
-  }
+///
+/// Returns `None` if the text does not match. Each transformer gets the
+/// values of the capture groups of its parameter, or the whole match of the
+/// parameter when its regexps have no capture groups. A group that did not
+/// match gives an empty string. An error from a transformer goes to the
+/// caller.
+pub fn Expression::match_(self : Expression, text : String) -> Match? raise {
+  guard self.tree_regexp.match_(text) is Some(group) else { return None }
+  let arg_groups = group.children
+  let params = self.parameter_types.mapi((i, entry) => {
+    let group = arg_groups[i]
+    let values = group.values().map(v => v.unwrap_or(""))
+    let value = entry.transformer.call(values)
+    { value, type_: entry.type_, raw: raw_text(entry.type_, group), group, }
+  })
   Some({ params, })
 }
 
 ///|
-/// Count the total number of capture groups produced by the compiled form
-/// of a parameter's patterns. The compiler wraps patterns in one outer
-/// capturing group: `((?:pat1)|(?:pat2))`, so we start with 1 for the outer
-/// group, then add any inner capturing groups from the patterns themselves.
-fn count_capture_groups(patterns : Array[RegexPattern]) -> Int {
-  let mut count = 1 // the outer capturing group added by the compiler
-  for pat in patterns {
-    count = count + count_groups_in_pattern(pat.to_string())
+fn raw_text(type_ : ParamType, group : Group) -> String {
+  let s = group.value.unwrap_or("")
+  let quoted = s.length() >= 2 &&
+    (
+      (s.has_prefix("\"") && s.has_suffix("\"")) ||
+      (s.has_prefix("'") && s.has_suffix("'"))
+    )
+  match type_ {
+    String_ if quoted =>
+      s.view(start_offset=1, end_offset=s.length() - 1).to_owned()
+    _ => s
   }
-  count
-}
-
-///|
-/// Count capturing groups in a single regex pattern string.
-/// A capturing group is `(` not followed by `?`.
-fn count_groups_in_pattern(pattern : String) -> Int {
-  let chars = pattern.to_array()
-  let len = chars.length()
-  let mut count = 0
-  let mut i = 0
-  while i < len {
-    if chars[i] == '\\' {
-      // skip escaped character
-      i = i + 2
-    } else if chars[i] == '(' {
-      if i + 1 < len && chars[i + 1] == '?' {
-        // non-capturing group (?:...) — don't count
-        ()
-      } else {
-        count = count + 1
-      }
-      i = i + 1
-    } else {
-      i = i + 1
-    }
-  }
-  count
 }
 
 ///|

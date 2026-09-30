@@ -360,7 +360,7 @@ test "Registry long transformer produces LongVal" {
 test "Registry byte transformer produces ByteVal" {
   let reg = ParamTypeRegistry::default()
   let entry = reg.get("byte").unwrap()
-  let result = entry.transformer.call(["255"])
+  let result = entry.transformer.call(["-1"])
   assert_eq(result, ParamValue::ByteVal(b'\xFF'))
 }
 

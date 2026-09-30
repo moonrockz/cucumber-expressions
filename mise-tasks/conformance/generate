@@ -37,7 +37,9 @@ OUTPUT = ROOT / "src" / "conformance_wbtest.mbt"
 
 # Reference cases that fail today. Each one is generated with #skip and the
 # issue that tracks the gap. Remove an entry when its issue is fixed.
-KNOWN_GAPS: dict[str, int] = {}
+KNOWN_GAPS: dict[str, int] = {
+    "matching/matches-bigdecimal": 26,
+}
 
 # Reference suites that need an API this package does not have yet.
 UNSUPPORTED_SUITES: dict[str, int] = {
