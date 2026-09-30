@@ -62,5 +62,10 @@ jobs:
       - name: Install dependencies
         run: moon update
 
+      - name: Check generated files are up to date
+        run: |
+          mise run codegen:captures
+          git diff --exit-code
+
       - name: Run unit tests on js, wasm-gc and native
         run: mise run test:all
