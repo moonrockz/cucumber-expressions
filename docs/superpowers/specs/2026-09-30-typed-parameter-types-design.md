@@ -2,7 +2,8 @@
 
 - Date: 2026-09-30
 - Issue: [#31](https://github.com/moonrockz/cucumber-expressions/issues/31)
-- Related: [#29](https://github.com/moonrockz/cucumber-expressions/issues/29) (`@any` casts), [#30](https://github.com/moonrockz/cucumber-expressions/issues/30) (tests on all targets), [#32](https://github.com/moonrockz/cucumber-expressions/issues/32) (codegen CLI, out of scope)
+- Also fixes: [#29](https://github.com/moonrockz/cucumber-expressions/issues/29) (`@any` does not work on js and wasm-gc)
+- Related: [#30](https://github.com/moonrockz/cucumber-expressions/issues/30) (tests on all targets), [#32](https://github.com/moonrockz/cucumber-expressions/issues/32) (codegen CLI, out of scope)
 - Target release: 0.6.0
 
 ## Goal
@@ -13,7 +14,7 @@ Give custom parameter types the same features as the Java `ParameterType` API
 - The transformer returns the user's own type, and the caller gets that type back without casts.
 - The transformer's arity is checked against the capture groups of the regexps when the type is registered.
 
-The existing untyped API (`register`, `Transformer`, `CustomVal`) does not change.
+The untyped API (`register`, `Transformer`) stays. `CustomVal` and the `tonyfettes/any` dependency are removed (see "Removing `@any`").
 
 ## Background
 
@@ -30,13 +31,13 @@ In scope:
 2. A flat "zipper" decoder `Captures1` to `Captures8`, with `define_with`.
 3. `define1` to `define8`, which take a transformer with 1 to 8 `String` arguments.
 4. Traits `ParameterTypeDef` and `FromGroups1` to `FromGroups8`, with `define_type1` to `define_type8`.
-5. A `test:all` task that runs the tests on js, wasm-gc and native, and a CI job for it (#30).
+5. Remove `tonyfettes/any` and `ParamValue::CustomVal` (#29).
+6. A `test:all` task that runs the tests on js, wasm-gc and native, and a CI job for it (#30).
 
 Out of scope:
 
 - The codegen CLI for `#cucumber.parameter_type` attributes (#32).
 - Changes to moonspec ([moonrockz/moonspec#41](https://github.com/moonrockz/moonspec/issues/41)).
-- Changing `CustomVal` to cast-free storage (#29).
 
 ## Public API
 
@@ -162,6 +163,18 @@ pub suberror ParameterTypeError {
 }
 ```
 
+## Removing `@any`
+
+`tonyfettes/any` 0.1.5 does not work on js (wrong downcasts) or wasm-gc (even `Any::of` on a `String` fails WebAssembly validation). The default transformer of `register` calls `Any::of`, so every wasm-gc program that links this library fails today (#29).
+
+`Yoorkin/any` works on all targets, but each custom type needs an `Anyable` implementation with an `extenum` payload. The typed handles in this spec give custom types with no such code, so the library drops dynamic values instead.
+
+- Remove the `tonyfettes/any` import from `moon.mod` and `src/moon.pkg`.
+- Remove `ParamValue::CustomVal`.
+- `register` without a `transformer` gives `StringVal` of the first value (the first capture group, or the whole match). `Param.type_` is still `Custom(name)`.
+- A `Transformer` that returned `CustomVal(@any.of(x))` must change to `define1` to `define8`, `define_with` or `define_type1` to `define_type8`, which give `TypedVal`.
+- Tests that cast `CustomVal` are rewritten for `StringVal` or for typed handles.
+
 ## Behavior
 
 ### Counting capture groups
@@ -219,6 +232,8 @@ Typed types are ordinary registry entries:
 | `src/expression.mbt` | `Match::get`, `Match::get_all` |
 | `mise-tasks/codegen/captures` | generator for the two generated files |
 | `mise-tasks/test/all` | tests on js, wasm-gc and native |
+| `src/param_value.mbt` | remove `CustomVal`, add `TypedVal` |
+| `src/param_type.mbt` | default transformer gives `StringVal` |
 
 The generated files start with a "DO NOT EDIT" header. The generator follows the pattern of `mise-tasks/conformance/generate`.
 
@@ -227,9 +242,11 @@ The generated files start with a "DO NOT EDIT" header. The generator follows the
 Breaking changes (0.6.0):
 
 - New `ParamValue::TypedVal` variant.
+- `ParamValue::CustomVal` and the `tonyfettes/any` dependency are removed.
+- `register` without a transformer gives `StringVal`, not `CustomVal`.
 - New `ParameterTypeError` cases.
 
-Exhaustive `match` statements on these types need new arms. `register`, `Transformer` and `CustomVal` do not change.
+Exhaustive `match` statements on these types need changes. The signatures of `register` and `Transformer` do not change. moonspec must also stop using `tonyfettes/any` ([moonrockz/moonspec#41](https://github.com/moonrockz/moonspec/issues/41)).
 
 ## Testing
 
@@ -242,9 +259,9 @@ Tests are written before the code. They cover:
 - `define1` to `define8` and `define_type1` to `define_type8`;
 - snippets and `RegularExpression` with typed types.
 
-`mise run test:all` runs all tests on js, wasm-gc and native, and a CI job runs it.
+`mise run test:all` runs all tests on js, wasm-gc and native, and a CI job runs it. This is possible only after `@any` is removed, because any use of `tonyfettes/any` stops the wasm-gc test module from compiling.
 
 ## Documentation
 
-- README: a section "Typed parameter types" with `define1`, the traits, `Captures` with composition, and `Match::get`.
+- README: a section "Typed parameter types" with `define1`, the traits, `Captures` with composition, and `Match::get`. Remove `CustomVal` and `@any` from the custom parameter type examples.
 - AGENTS.md: the new files.
