@@ -385,45 +385,6 @@ fn parse_int_in_range(
 }
 
 ///|
-/// A name is valid when it has none of `{`, `}`, `(`, `)`, `\` and `/`,
-/// after `\` is removed before the regex characters `[`, `]`, `$`, `.`,
-/// `|`, `?`, `*` and `+`.
-fn is_valid_parameter_type_name(name : String) -> Bool {
-  let chars = name.to_array()
-  let mut i = 0
-  while i < chars.length() {
-    let c = chars[i]
-    if c == '\\' &&
-      i + 1 < chars.length() &&
-      "[]$.|?*+".contains_char(chars[i + 1]) {
-      i = i + 2
-      continue
-    }
-    if "{}()\\/".contains_char(c) {
-      return false
-    }
-    i = i + 1
-  }
-  true
-}
-
-///|
-fn parse_int_in_range(
-  text : String,
-  type_name : String,
-  min : Int,
-  max : Int,
-) -> Int raise {
-  let n = @string.parse_int(text)
-  if n < min || n > max {
-    raise Failure::Failure(
-      "\{text} is out of range for {\{type_name}}: \{min}..\{max}",
-    )
-  }
-  n
-}
-
-///|
 pub fn ParamTypeRegistry::get(
   self : ParamTypeRegistry,
   name : String,
