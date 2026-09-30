@@ -25,6 +25,10 @@ moonrockz/cucumber-expressions
 │   ├── parser.mbt        # Tokens → AST (port of the reference parser)
 │   ├── compiler.mbt      # AST → regex string, with structure checks
 │   ├── expression.mbt    # Public API: Expression, Match, Param
+│   ├── tree_regexp.mbt   # Capture groups of a match as a tree (Group)
+│   ├── regular_expression.mbt # RegularExpression: step patterns as regexes
+│   ├── expression_factory.mbt # StepExpression and ExpressionFactory
+│   ├── generator.mbt     # CucumberExpressionGenerator: snippets from step text
 │   ├── param_type.mbt    # ParamType enum + ParamTypeRegistry
 │   ├── error.mbt         # ExpressionError suberror types
 │   ├── lib.mbt           # Package entry point

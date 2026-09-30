@@ -5,8 +5,6 @@
 // The testdata is Copyright (c) Cucumber Ltd and contributors, MIT License.
 //
 // Known gaps are generated with #skip and the issue that tracks them.
-// Not generated:
-//   testdata/regular-expression/matching (needs #16)
 
 ///|
 /// Integer value of an argument, as a decimal string.
@@ -1396,4 +1394,35 @@ test "conformance/tokenizer/phrase" {
   if tokens != expected {
     fail("got " + @debug.to_string(tokens))
   }
+}
+
+///|
+test "conformance/regular-expression/optional-capture-groups-all" {
+  let expr = RegularExpression::new("^a (b )?c (d )?e (f )?g$")
+  let result = expr.match_("a b c d e f g")
+  guard result is Some(m) else { fail("expected a match") }
+  assert_eq(m.params.length(), 3)
+  assert_eq(conformance_text(m.params[0].value), Some("b "))
+  assert_eq(conformance_text(m.params[1].value), Some("d "))
+  assert_eq(conformance_text(m.params[2].value), Some("f "))
+}
+
+///|
+test "conformance/regular-expression/optional-capture-groups-issue" {
+  let expr = RegularExpression::new("^I should( not)? be on the map$")
+  let result = expr.match_("I should be on the map")
+  guard result is Some(m) else { fail("expected a match") }
+  assert_eq(m.params.length(), 1)
+  guard m.params[0].value is NullVal else { fail("arg 0: expected NullVal") }
+}
+
+///|
+test "conformance/regular-expression/optional-capture-groups-some" {
+  let expr = RegularExpression::new("^a (b )?c (d )?e (f )?g$")
+  let result = expr.match_("a b c e f g")
+  guard result is Some(m) else { fail("expected a match") }
+  assert_eq(m.params.length(), 3)
+  assert_eq(conformance_text(m.params[0].value), Some("b "))
+  guard m.params[1].value is NullVal else { fail("arg 1: expected NullVal") }
+  assert_eq(conformance_text(m.params[2].value), Some("f "))
 }

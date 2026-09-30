@@ -41,7 +41,9 @@ pub fn Expression::parse_with_registry(
 ) -> Expression raise ExpressionError {
   let ast = parse_expression(expression)
   let compiled = compile_ast(expression, ast, registry)
-  let tree_regexp = TreeRegexp::new(compiled.regex)
+  let tree_regexp = TreeRegexp::new(compiled.regex, on_error=detail => {
+    regex_does_not_compile_error(compiled.regex, detail)
+  })
   let groups = tree_regexp.group_builder.children.length()
   if groups != compiled.parameter_types.length() {
     raise regex_does_not_compile_error(

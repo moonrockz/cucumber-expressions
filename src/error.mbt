@@ -236,6 +236,12 @@ pub suberror ParameterTypeError {
   IllegalParameterName(name~ : String)
   /// The parameter type has no regexps.
   NoRegexps(name~ : String)
+  /// Two preferential parameter types have the same regexp.
+  DuplicatePreferentialParameterType(
+    regexp~ : String,
+    first~ : String,
+    second~ : String
+  )
 } derive(Debug)
 
 ///|
@@ -250,6 +256,8 @@ pub fn ParameterTypeError::message(self : ParameterTypeError) -> String {
       "Illegal character in parameter name {\{name}}. Parameter names may not contain '{', '}', '(', ')', '\\' or '/'"
     NoRegexps(name~) =>
       "The parameter type {\{name}} must have at least one regexp"
+    DuplicatePreferentialParameterType(regexp~, first~, second~) =>
+      "There can only be one preferential parameter type per regexp. The regexp /\{regexp}/ is used for two preferential parameter types, {\{first}} and {\{second}}"
   }
 }
 
@@ -264,3 +272,50 @@ pub extend ParameterTypeError with Show::{to_string, output}
 ///|
 #deprecated
 pub extend ParameterTypeError with @debug.Debug::{to_repr}
+
+///|
+/// A capture group of a regular expression matches more than one parameter
+/// type, and none of them is preferential.
+pub suberror AmbiguousParameterTypeError {
+  AmbiguousParameterType(
+    regexp~ : String,
+    expression_regexp~ : String,
+    names~ : Array[String],
+    generated~ : Array[String]
+  )
+} derive(Debug)
+
+///|
+/// The error message, in the same format as the reference implementation.
+pub fn AmbiguousParameterTypeError::message(
+  self : AmbiguousParameterTypeError,
+) -> String {
+  let AmbiguousParameterType(regexp~, expression_regexp~, names~, generated~) = self
+  let names = names.map(n => "{\{n}}").join("\n   ")
+  let generated = generated.join("\n   ")
+  (
+    $|Your Regular Expression /\{expression_regexp}/
+    $|matches multiple parameter types with regexp \{regexp}:
+    $|   \{names}
+    $|
+    $|I couldn't decide which one to use. You have two options:
+    $|
+    $|1) Use a Cucumber Expression instead of a Regular Expression. Try one of these:
+    $|   \{generated}
+    $|
+    $|2) Make one of the parameter types preferential and continue to use a Regular Expression.
+    $|
+  )
+}
+
+///|
+pub impl Show for AmbiguousParameterTypeError with fn output(self, logger) {
+  logger.write_string(self.message())
+}
+
+///|
+pub extend AmbiguousParameterTypeError with Show::{to_string, output}
+
+///|
+#deprecated
+pub extend AmbiguousParameterTypeError with @debug.Debug::{to_repr}
