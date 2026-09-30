@@ -3,9 +3,11 @@
 ///
 /// The value is kept in a closure. The closure writes the value into the
 /// slot of the `ParameterType[T]` handle that made it, so reading the value
-/// back needs no casts and works on every target.
+/// back needs no casts and works on every target. `token` is the token of
+/// that handle, so another handle does not run `put`.
 pub struct TypedValue {
   priv type_name : String
+  priv token : Ref[Unit]
   priv put : () -> Unit
 }
 
@@ -22,11 +24,13 @@ pub fn TypedValue::type_name(self : TypedValue) -> String {
 pub struct ParameterType[T] {
   priv name : String
   priv slot : Ref[T?]
+  /// Identifies the handle. Each handle has its own token.
+  priv token : Ref[Unit]
 }
 
 ///|
 fn[T] ParameterType::new(name : String) -> ParameterType[T] {
-  { name, slot: { val: None, }, }
+  { name, slot: { val: None, }, token: { val: (), }, }
 }
 
 ///|
@@ -39,14 +43,21 @@ pub fn[T] ParameterType::name(self : ParameterType[T]) -> String {
 /// Wrap a value of this type.
 fn[T] ParameterType::wrap(self : ParameterType[T], value : T) -> ParamValue {
   let slot = self.slot
-  TypedVal({ type_name: self.name, put: () => slot.val = Some(value), })
+  TypedVal({
+    type_name: self.name,
+    token: self.token,
+    put: () => slot.val = Some(value),
+  })
 }
 
 ///|
 /// The value of `param`, or `None` when `param` did not come from this
 /// handle.
 fn[T] ParameterType::try_get(self : ParameterType[T], param : Param) -> T? {
-  guard param.value is TypedVal(typed) else { return None }
+  guard param.value is TypedVal(typed) &&
+    physical_equal(typed.token, self.token) else {
+    return None
+  }
   self.slot.val = None
   (typed.put)()
   let value = self.slot.val
@@ -79,7 +90,7 @@ fn parameter_type_name(type_ : ParamType) -> String {
     Float => "float"
     String_ => "string"
     Word => "word"
-    Anonymous => ""
+    Anonymous => "anonymous"
     Double_ => "double"
     Long => "long"
     Byte => "byte"

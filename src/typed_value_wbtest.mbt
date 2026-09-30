@@ -112,3 +112,35 @@ test "typed value: a plain transformer still gets an empty string for a missing 
   guard expr.match_("y") is Some(m) else { fail("expected a match") }
   debug_inspect(m.params[0].value, content="StringVal(\"|y\")")
 }
+
+///|
+test "typed value: reading with another handle keeps no value in any slot" {
+  let reg_a = ParamTypeRegistry::default()
+  let color_a : ParameterType[Color] = ParameterType::new("color")
+  register_color(reg_a, color_a)
+  let reg_b = ParamTypeRegistry::default()
+  let color_b : ParameterType[Color] = ParameterType::new("color")
+  register_color(reg_b, color_b)
+  let expr = Expression::parse_with_registry("{color}", reg_b)
+  guard expr.match_("blue") is Some(m) else { fail("expected a match") }
+  inspect(color_a.try_get(m.params[0]) is None, content="true")
+  inspect(m.get_all(color_a).length(), content="0")
+  inspect(color_a.slot.val is None, content="true")
+  inspect(color_b.slot.val is None, content="true")
+}
+
+///|
+test "typed value: get names the anonymous type in the error" {
+  let color : ParameterType[Color] = ParameterType::new("color")
+  let expr = RegularExpression::new("^a (x+)$")
+  guard expr.match_("a xx") is Some(m) else { fail("expected a match") }
+  let message = try color.get(m.params[0]) catch {
+    e => e.to_string()
+  } noraise {
+    _ => fail("expected an error")
+  }
+  inspect(
+    message,
+    content="Expected a parameter of type {color}, but the parameter has type {anonymous}",
+  )
+}
