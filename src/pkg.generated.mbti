@@ -76,6 +76,49 @@ pub struct Captures1[T] {
   // private fields
 }
 pub fn[A, T] Captures1::map(Self[A], (A) -> T raise) -> Self[T]
+pub fn[A, B] Captures1::zip(Self[A], Self[B]) -> Captures2[A, B]
+
+pub struct Captures2[A, B] {
+  // private fields
+}
+pub fn[A, B, T] Captures2::map(Self[A, B], (A, B) -> T raise) -> Captures1[T]
+pub fn[A, B, C] Captures2::zip(Self[A, B], Captures1[C]) -> Captures3[A, B, C]
+
+pub struct Captures3[A, B, C] {
+  // private fields
+}
+pub fn[A, B, C, T] Captures3::map(Self[A, B, C], (A, B, C) -> T raise) -> Captures1[T]
+pub fn[A, B, C, D] Captures3::zip(Self[A, B, C], Captures1[D]) -> Captures4[A, B, C, D]
+
+pub struct Captures4[A, B, C, D] {
+  // private fields
+}
+pub fn[A, B, C, D, T] Captures4::map(Self[A, B, C, D], (A, B, C, D) -> T raise) -> Captures1[T]
+pub fn[A, B, C, D, E] Captures4::zip(Self[A, B, C, D], Captures1[E]) -> Captures5[A, B, C, D, E]
+
+pub struct Captures5[A, B, C, D, E] {
+  // private fields
+}
+pub fn[A, B, C, D, E, T] Captures5::map(Self[A, B, C, D, E], (A, B, C, D, E) -> T raise) -> Captures1[T]
+pub fn[A, B, C, D, E, F] Captures5::zip(Self[A, B, C, D, E], Captures1[F]) -> Captures6[A, B, C, D, E, F]
+
+pub struct Captures6[A, B, C, D, E, F] {
+  // private fields
+}
+pub fn[A, B, C, D, E, F, T] Captures6::map(Self[A, B, C, D, E, F], (A, B, C, D, E, F) -> T raise) -> Captures1[T]
+pub fn[A, B, C, D, E, F, G] Captures6::zip(Self[A, B, C, D, E, F], Captures1[G]) -> Captures7[A, B, C, D, E, F, G]
+
+pub struct Captures7[A, B, C, D, E, F, G] {
+  // private fields
+}
+pub fn[A, B, C, D, E, F, G, T] Captures7::map(Self[A, B, C, D, E, F, G], (A, B, C, D, E, F, G) -> T raise) -> Captures1[T]
+pub fn[A, B, C, D, E, F, G, H] Captures7::zip(Self[A, B, C, D, E, F, G], Captures1[H]) -> Captures8[A, B, C, D, E, F, G, H]
+
+pub struct Captures8[A, B, C, D, E, F, G, H] {
+  // private fields
+}
+pub fn[A, B, C, D, E, F, G, H, T] Captures8::map(Self[A, B, C, D, E, F, G, H], (A, B, C, D, E, F, G, H) -> T raise) -> Captures1[T]
+pub fn[A, B, C, D, E, F, G, H, X] Captures8::zip(Self[A, B, C, D, E, F, G, H], Captures1[X]) -> Captures2[(A, B, C, D, E, F, G, H), X]
 
 pub(all) struct CucumberExpressionGenerator {
   // private fields
