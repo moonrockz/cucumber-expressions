@@ -47,11 +47,7 @@ pub fn Expression::parse_with_registry(
     count_capture_groups(e.patterns)
   })
   let regex = @regexp.compile(regex_str.view()) catch {
-    _ =>
-      raise ExpressionError::ValidationError(
-        position=0,
-        message="Failed to compile regex: " + regex_str,
-      )
+    e => raise regex_does_not_compile_error(regex_str, e)
   }
   { source: expression, regex, param_types, transformers, group_counts, }
 }
