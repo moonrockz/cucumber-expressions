@@ -5,5 +5,4 @@ import {
   "moonbitlang/core/string",
   "moonbitlang/regexp",
   "moonbitlang/x/decimal",
-  "tonyfettes/any",
 }

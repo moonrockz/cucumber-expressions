@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#MISE description="Run MoonBit unit tests on js, wasm-gc and native"
+set -euo pipefail
+for target in js wasm-gc native; do
+  echo "== moon test --target ${target}"
+  moon test --target "${target}"
+done

@@ -211,26 +211,21 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
 /// use the type. `prefer_for_regexp_match` (default `false`) makes a
 /// `RegularExpression` use this type before other types with the same
 /// regexp.
+///
+/// Without a `transformer`, the value is `StringVal` of the first value:
+/// the first capture group, or the whole match when there are no groups.
 pub fn ParamTypeRegistry::register(
   self : ParamTypeRegistry,
   name : String,
   type_ : ParamType,
   patterns : Array[RegexPattern],
   transformer? : Transformer = Transformer::new(fn(groups) {
-    ParamValue::CustomVal(@any.of(groups[0]))
+    ParamValue::StringVal(groups[0])
   }),
   use_for_snippets? : Bool = true,
   prefer_for_regexp_match? : Bool = false,
 ) -> Unit raise ParameterTypeError {
-  if !is_valid_parameter_type_name(name) {
-    raise IllegalParameterName(name~)
-  }
-  if patterns.is_empty() {
-    raise NoRegexps(name~)
-  }
-  if self.get(name) is Some(_) {
-    raise DuplicateParameterType(name~)
-  }
+  self.check_name_and_regexps(name, patterns)
   if prefer_for_regexp_match {
     for pattern in patterns {
       let regexp = pattern.to_string()
@@ -252,6 +247,25 @@ pub fn ParamTypeRegistry::register(
     use_for_snippets~,
     prefer_for_regexp_match~,
   )
+}
+
+///|
+/// Raise an error when the name has a character that is not permitted,
+/// when there are no regexps, or when the name is already registered.
+fn ParamTypeRegistry::check_name_and_regexps(
+  self : ParamTypeRegistry,
+  name : String,
+  patterns : Array[RegexPattern],
+) -> Unit raise ParameterTypeError {
+  if !is_valid_parameter_type_name(name) {
+    raise IllegalParameterName(name~)
+  }
+  if patterns.is_empty() {
+    raise NoRegexps(name~)
+  }
+  if self.get(name) is Some(_) {
+    raise DuplicateParameterType(name~)
+  }
 }
 
 ///|

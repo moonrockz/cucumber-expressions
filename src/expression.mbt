@@ -83,8 +83,7 @@ pub fn Expression::match_(self : Expression, text : String) -> Match? raise {
   let arg_groups = group.children
   let params = self.parameter_types.mapi((i, entry) => {
     let group = arg_groups[i]
-    let values = group.values().map(v => v.unwrap_or(""))
-    let value = entry.transformer.call(values)
+    let value = entry.transformer.call_with_missing(group.values())
     { value, type_: entry.type_, raw: raw_text(entry.type_, group), group, }
   })
   Some({ params, })

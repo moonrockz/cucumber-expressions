@@ -6,7 +6,6 @@ import {
   "moonbitlang/core/debug",
   "moonbitlang/core/json",
   "moonbitlang/x/decimal",
-  "tonyfettes/any",
 }
 
 // Values
@@ -50,6 +49,13 @@ pub suberror ParameterTypeError {
   IllegalParameterName(name~ : String)
   NoRegexps(name~ : String)
   DuplicatePreferentialParameterType(regexp~ : String, first~ : String, second~ : String)
+  WrongParameterType(expected~ : String, actual~ : String)
+  MissingParameter(name~ : String)
+  AmbiguousParameter(name~ : String, count~ : Int)
+  GroupDidNotMatch(name~ : String, index~ : Int)
+  ArityMismatch(name~ : String, expected~ : Int, groups~ : Int)
+  InvalidRegexp(name~ : String, regexp~ : String)
+  WrongGroupCount(name~ : String, expected~ : Int, actual~ : Int)
 } derive(@debug.Debug)
 pub fn ParameterTypeError::message(Self) -> String
 pub fn ParameterTypeError::output(Self, &Logger) -> Unit
@@ -59,6 +65,64 @@ pub fn ParameterTypeError::to_string(Self) -> String
 pub impl Show for ParameterTypeError
 
 // Types and methods
+pub enum Captures {
+}
+pub fn[T] Captures::custom((String) -> T raise) -> Captures1[T]
+pub fn Captures::double() -> Captures1[Double]
+pub fn Captures::float() -> Captures1[Double]
+pub fn Captures::int() -> Captures1[Int]
+pub fn Captures::long() -> Captures1[Int64]
+pub fn[T] Captures::optional(Captures1[T]) -> Captures1[T?]
+pub fn Captures::string() -> Captures1[String]
+
+pub struct Captures1[T] {
+  // private fields
+}
+pub fn[A, T] Captures1::map(Self[A], (A) -> T raise) -> Self[T]
+pub fn[A, B] Captures1::zip(Self[A], Self[B]) -> Captures2[A, B]
+
+pub struct Captures2[A, B] {
+  // private fields
+}
+pub fn[A, B, T] Captures2::map(Self[A, B], (A, B) -> T raise) -> Captures1[T]
+pub fn[A, B, C] Captures2::zip(Self[A, B], Captures1[C]) -> Captures3[A, B, C]
+
+pub struct Captures3[A, B, C] {
+  // private fields
+}
+pub fn[A, B, C, T] Captures3::map(Self[A, B, C], (A, B, C) -> T raise) -> Captures1[T]
+pub fn[A, B, C, D] Captures3::zip(Self[A, B, C], Captures1[D]) -> Captures4[A, B, C, D]
+
+pub struct Captures4[A, B, C, D] {
+  // private fields
+}
+pub fn[A, B, C, D, T] Captures4::map(Self[A, B, C, D], (A, B, C, D) -> T raise) -> Captures1[T]
+pub fn[A, B, C, D, E] Captures4::zip(Self[A, B, C, D], Captures1[E]) -> Captures5[A, B, C, D, E]
+
+pub struct Captures5[A, B, C, D, E] {
+  // private fields
+}
+pub fn[A, B, C, D, E, T] Captures5::map(Self[A, B, C, D, E], (A, B, C, D, E) -> T raise) -> Captures1[T]
+pub fn[A, B, C, D, E, F] Captures5::zip(Self[A, B, C, D, E], Captures1[F]) -> Captures6[A, B, C, D, E, F]
+
+pub struct Captures6[A, B, C, D, E, F] {
+  // private fields
+}
+pub fn[A, B, C, D, E, F, T] Captures6::map(Self[A, B, C, D, E, F], (A, B, C, D, E, F) -> T raise) -> Captures1[T]
+pub fn[A, B, C, D, E, F, G] Captures6::zip(Self[A, B, C, D, E, F], Captures1[G]) -> Captures7[A, B, C, D, E, F, G]
+
+pub struct Captures7[A, B, C, D, E, F, G] {
+  // private fields
+}
+pub fn[A, B, C, D, E, F, G, T] Captures7::map(Self[A, B, C, D, E, F, G], (A, B, C, D, E, F, G) -> T raise) -> Captures1[T]
+pub fn[A, B, C, D, E, F, G, H] Captures7::zip(Self[A, B, C, D, E, F, G], Captures1[H]) -> Captures8[A, B, C, D, E, F, G, H]
+
+pub struct Captures8[A, B, C, D, E, F, G, H] {
+  // private fields
+}
+pub fn[A, B, C, D, E, F, G, H, T] Captures8::map(Self[A, B, C, D, E, F, G, H], (A, B, C, D, E, F, G, H) -> T raise) -> Captures1[T]
+pub fn[A, B, C, D, E, F, G, H, X] Captures8::zip(Self[A, B, C, D, E, F, G, H], Captures1[X]) -> Captures2[(A, B, C, D, E, F, G, H), X]
+
 pub(all) struct CucumberExpressionGenerator {
   // private fields
 }
@@ -107,6 +171,8 @@ pub(all) struct Match {
 } derive(Eq, @debug.Debug)
 #deprecated
 pub fn Match::equal(Self, Self) -> Bool
+pub fn[T] Match::get(Self, ParameterType[T]) -> T raise ParameterTypeError
+pub fn[T] Match::get_all(Self, ParameterType[T]) -> Array[T]
 #deprecated
 pub fn Match::not_equal(Self, Self) -> Bool
 #deprecated
@@ -202,6 +268,23 @@ pub(all) struct ParamTypeRegistry {
   // private fields
 }
 pub fn ParamTypeRegistry::default() -> Self
+pub fn[T] ParamTypeRegistry::define1(Self, String, Array[RegexPattern], (String) -> T raise, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
+pub fn[T] ParamTypeRegistry::define2(Self, String, Array[RegexPattern], (String, String) -> T raise, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
+pub fn[T] ParamTypeRegistry::define3(Self, String, Array[RegexPattern], (String, String, String) -> T raise, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
+pub fn[T] ParamTypeRegistry::define4(Self, String, Array[RegexPattern], (String, String, String, String) -> T raise, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
+pub fn[T] ParamTypeRegistry::define5(Self, String, Array[RegexPattern], (String, String, String, String, String) -> T raise, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
+pub fn[T] ParamTypeRegistry::define6(Self, String, Array[RegexPattern], (String, String, String, String, String, String) -> T raise, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
+pub fn[T] ParamTypeRegistry::define7(Self, String, Array[RegexPattern], (String, String, String, String, String, String, String) -> T raise, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
+pub fn[T] ParamTypeRegistry::define8(Self, String, Array[RegexPattern], (String, String, String, String, String, String, String, String) -> T raise, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
+pub fn[T : ParameterTypeDef + FromGroups1] ParamTypeRegistry::define_type1(Self) -> ParameterType[T] raise ParameterTypeError
+pub fn[T : ParameterTypeDef + FromGroups2] ParamTypeRegistry::define_type2(Self) -> ParameterType[T] raise ParameterTypeError
+pub fn[T : ParameterTypeDef + FromGroups3] ParamTypeRegistry::define_type3(Self) -> ParameterType[T] raise ParameterTypeError
+pub fn[T : ParameterTypeDef + FromGroups4] ParamTypeRegistry::define_type4(Self) -> ParameterType[T] raise ParameterTypeError
+pub fn[T : ParameterTypeDef + FromGroups5] ParamTypeRegistry::define_type5(Self) -> ParameterType[T] raise ParameterTypeError
+pub fn[T : ParameterTypeDef + FromGroups6] ParamTypeRegistry::define_type6(Self) -> ParameterType[T] raise ParameterTypeError
+pub fn[T : ParameterTypeDef + FromGroups7] ParamTypeRegistry::define_type7(Self) -> ParameterType[T] raise ParameterTypeError
+pub fn[T : ParameterTypeDef + FromGroups8] ParamTypeRegistry::define_type8(Self) -> ParameterType[T] raise ParameterTypeError
+pub fn[T] ParamTypeRegistry::define_with(Self, String, Array[RegexPattern], Captures1[T], use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> ParameterType[T] raise ParameterTypeError
 pub fn ParamTypeRegistry::entries_view(Self) -> ArrayView[ParamTypeEntry]
 pub fn ParamTypeRegistry::get(Self, String) -> ParamTypeEntry?
 pub fn ParamTypeRegistry::lookup_by_regexp(Self, String, String, String) -> ParamTypeEntry? raise AmbiguousParameterTypeError
@@ -220,8 +303,8 @@ pub(all) enum ParamValue {
   AnonymousVal(String)
   BigDecimalVal(@decimal.Decimal)
   BigIntegerVal(@bigint.BigInt)
-  CustomVal(@any.Any)
   NullVal
+  TypedVal(TypedValue)
 }
 #deprecated
 pub fn ParamValue::equal(Self, Self) -> Bool
@@ -246,6 +329,12 @@ pub fn ParameterInfo::equal(Self, Self) -> Bool
 pub fn ParameterInfo::not_equal(Self, Self) -> Bool
 #deprecated
 pub fn ParameterInfo::to_repr(Self) -> @debug.Repr
+
+pub struct ParameterType[T] {
+  // private fields
+}
+pub fn[T] ParameterType::get(Self[T], Param) -> T raise ParameterTypeError
+pub fn[T] ParameterType::name(Self[T]) -> String
 
 pub(all) struct RegexPattern {
   // private fields
@@ -318,6 +407,49 @@ pub fn Transformer::new((Array[String]) -> ParamValue raise) -> Self
 pub fn Transformer::to_repr(Self) -> @debug.Repr
 pub impl @debug.Debug for Transformer
 
+pub struct TypedValue {
+  // private fields
+}
+pub fn TypedValue::type_name(Self) -> String
+
 // Type aliases
 
 // Traits
+pub(open) trait FromGroups1 {
+  fn from_groups(String) -> Self raise
+}
+
+pub(open) trait FromGroups2 {
+  fn from_groups(String, String) -> Self raise
+}
+
+pub(open) trait FromGroups3 {
+  fn from_groups(String, String, String) -> Self raise
+}
+
+pub(open) trait FromGroups4 {
+  fn from_groups(String, String, String, String) -> Self raise
+}
+
+pub(open) trait FromGroups5 {
+  fn from_groups(String, String, String, String, String) -> Self raise
+}
+
+pub(open) trait FromGroups6 {
+  fn from_groups(String, String, String, String, String, String) -> Self raise
+}
+
+pub(open) trait FromGroups7 {
+  fn from_groups(String, String, String, String, String, String, String) -> Self raise
+}
+
+pub(open) trait FromGroups8 {
+  fn from_groups(String, String, String, String, String, String, String, String) -> Self raise
+}
+
+pub(open) trait ParameterTypeDef {
+  fn name() -> String
+  fn regexps() -> Array[RegexPattern]
+  fn use_for_snippets() -> Bool = _
+  fn prefer_for_regexp_match() -> Bool = _
+}

@@ -64,8 +64,8 @@ pub fn RegularExpression::match_(
     let (value, type_) = match (entry, arg_group.value) {
       (_, None) => (NullVal, entry.map(e => e.type_).unwrap_or(Anonymous))
       (Some(entry), Some(_)) => {
-        let values = arg_group.values().map(v => v.unwrap_or(""))
-        (entry.transformer.call(values), entry.type_)
+        let values = typed_values(entry, builder.source, arg_group.values())
+        (entry.transformer.call_with_missing(values), entry.type_)
       }
       (None, Some(_)) =>
         (AnonymousVal(arg_group.values()[0].unwrap_or("")), Anonymous)
@@ -73,4 +73,42 @@ pub fn RegularExpression::match_(
     params.push({ value, type_, raw, group: arg_group, })
   }
   Some({ params, })
+}
+
+///|
+/// The values for the transformer of `entry`, when the group has the
+/// regexp `source`.
+///
+/// A typed parameter type decodes the groups of all its regexps. The group
+/// has only the groups of one regexp, so put them at the offset of that
+/// regexp, and give `None` for the groups of the other regexps. Other
+/// transformers get `values` unchanged.
+fn typed_values(
+  entry : ParamTypeEntry,
+  source : String,
+  values : Array[String?],
+) -> Array[String?] {
+  guard entry.transformer.with_missing is Some(_) && entry.patterns.length() > 1 else {
+    return values
+  }
+  let counts = entry.patterns.map(p => {
+    match create_group_builder(p.to_string()) {
+      Some(builder) => builder.children.length()
+      None => 0
+    }
+  })
+  let total = counts.fold(init=0, (a, b) => a + b)
+  guard total > 0 else { return values }
+  let result : Array[String?] = Array::make(total, None)
+  let mut offset = 0
+  for i, pattern in entry.patterns {
+    if pattern.to_string() == source {
+      for j in 0..<counts[i] {
+        result[offset + j] = values.get(j).unwrap_or(None)
+      }
+      return result
+    }
+    offset = offset + counts[i]
+  }
+  values
 }

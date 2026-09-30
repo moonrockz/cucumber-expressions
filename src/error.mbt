@@ -242,6 +242,22 @@ pub suberror ParameterTypeError {
     first~ : String,
     second~ : String
   )
+  /// A typed handle was used on a parameter of another type.
+  WrongParameterType(expected~ : String, actual~ : String)
+  /// No parameter of the match has the type of the handle.
+  MissingParameter(name~ : String)
+  /// More than one parameter of the match has the type of the handle.
+  AmbiguousParameter(name~ : String, count~ : Int)
+  /// A capture group of a typed parameter type did not match.
+  GroupDidNotMatch(name~ : String, index~ : Int)
+  /// The decoder of a typed parameter type takes a different number of
+  /// values than its regexps have capture groups.
+  ArityMismatch(name~ : String, expected~ : Int, groups~ : Int)
+  /// A regexp of a typed parameter type has parentheses that do not balance.
+  InvalidRegexp(name~ : String, regexp~ : String)
+  /// The decoder of a typed parameter type got a different number of
+  /// values than it decodes.
+  WrongGroupCount(name~ : String, expected~ : Int, actual~ : Int)
 } derive(Debug)
 
 ///|
@@ -258,6 +274,29 @@ pub fn ParameterTypeError::message(self : ParameterTypeError) -> String {
       "The parameter type {\{name}} must have at least one regexp"
     DuplicatePreferentialParameterType(regexp~, first~, second~) =>
       "There can only be one preferential parameter type per regexp. The regexp /\{regexp}/ is used for two preferential parameter types, {\{first}} and {\{second}}"
+    WrongParameterType(expected~, actual~) =>
+      "Expected a parameter of type {\{expected}}, but the parameter has type {\{actual}}"
+    MissingParameter(name~) => "The match has no parameter of type {\{name}}"
+    AmbiguousParameter(name~, count~) =>
+      "The match has \{count} parameters of type {\{name}}; use get_all"
+    GroupDidNotMatch(name~, index~) =>
+      "Capture group \{index} of the parameter type {\{name}} did not match"
+    ArityMismatch(name~, expected~, groups~) =>
+      "The parameter type {\{name}} decodes \{capture_groups(expected)}, but its regexps have \{capture_groups(groups)}"
+    InvalidRegexp(name~, regexp~) =>
+      "The regexp /\{regexp}/ of the parameter type {\{name}} has parentheses that do not balance"
+    WrongGroupCount(name~, expected~, actual~) =>
+      "The parameter type {\{name}} decodes \{capture_groups(expected)}, but the match has \{actual}"
+  }
+}
+
+///|
+/// `count` with "capture group" or "capture groups".
+fn capture_groups(count : Int) -> String {
+  if count == 1 {
+    "1 capture group"
+  } else {
+    "\{count} capture groups"
   }
 }
 
