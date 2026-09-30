@@ -189,7 +189,7 @@ The group count of a type is the number of top-level capture groups of each rege
 - `n > 1`: the group count must equal `n`. Groups of all regexps count, the same as the reference. For example, two regexps with one group each need `n = 2`.
 
 A mismatch raises `ArityMismatch`, with the message
-`The parameter type {coord} decodes 3 capture groups, but its regexps have 2`.
+`The parameter type {coord} decodes 3 capture groups, but its regexps have 2 capture groups`.
 A regexp whose parentheses do not balance raises `InvalidRegexp`.
 The checks of `register` (duplicate name, illegal name, no regexps, two preferential types with one regexp) also apply.
 
@@ -227,10 +227,11 @@ Typed types are ordinary registry entries:
 | `src/typed_value.mbt` | `TypedValue`, `ParameterType[T]`, `get` |
 | `src/captures.mbt` | the parts, `optional`, group count |
 | `src/captures_arity.mbt` | `Captures1` to `Captures8`, `zip`, `map`, fold (generated) |
-| `src/typed_registry.mbt` | `define_with`, `define1` to `define8`, arity check |
+| `src/typed_registry.mbt` | `define_with`, arity check |
+| `src/define_arity.mbt` | `define1` to `define8` (generated) |
 | `src/parameter_type_def.mbt` | `ParameterTypeDef`, `FromGroups1` to `FromGroups8`, `define_type1` to `define_type8` (generated) |
 | `src/expression.mbt` | `Match::get`, `Match::get_all` |
-| `mise-tasks/codegen/captures` | generator for the two generated files |
+| `mise-tasks/codegen/captures` | generator for the three generated files: `src/captures_arity.mbt`, `src/define_arity.mbt` and `src/parameter_type_def.mbt` |
 | `mise-tasks/test/all` | tests on js, wasm-gc and native |
 | `src/param_value.mbt` | remove `CustomVal`, add `TypedVal` |
 | `src/param_type.mbt` | default transformer gives `StringVal` |

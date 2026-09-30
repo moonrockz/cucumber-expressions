@@ -21,7 +21,14 @@ fn count_capture_groups(
 /// `captures` must decode as many values as the regexps have top-level
 /// capture groups, added over all regexps. A decoder of one value also
 /// accepts regexps with no groups; it then gets the whole match. Otherwise
-/// `ArityMismatch` is raised. The checks of `register` also apply.
+/// `ArityMismatch` is raised. The checks of `register` also apply, before
+/// the arity check.
+///
+/// Groups are counted over all regexps. So with the regexps `(a)b` and `c`,
+/// a decoder of one value is accepted, but a match of `c` raises
+/// `GroupDidNotMatch`, because the group of the first regexp did not match.
+/// Wrap the part in `Captures::optional`, or give each regexp the same
+/// groups.
 pub fn[T] ParamTypeRegistry::define_with(
   self : ParamTypeRegistry,
   name : String,

@@ -127,7 +127,7 @@ A group that did not match raises `GroupDidNotMatch`, unless its part is wrapped
 `map` returns a decoder that can be zipped again, so large types are built from named parts:
 
 ```moonbit skip nocheck
-let person = Captures::string().zip(Captures::string()).map((first, last) => Person::new(first, last))
+let person = @cucumber-expressions.Captures::string().zip(@cucumber-expressions.Captures::string()).map((first, last) => Person::new(first, last))
 let customer = person.zip(address).zip(contact).map((p, a, c) => Customer::new(p, a, c))
 ```
 

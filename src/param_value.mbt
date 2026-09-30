@@ -17,7 +17,9 @@ pub(all) enum ParamValue {
   /// optional group gives this value.
   NullVal
   /// The value of a typed parameter type. Read it with the
-  /// `ParameterType[T]` handle of the type.
+  /// `ParameterType[T]` handle of the type. Two `TypedVal` values are equal
+  /// only when they are the same value (reference equality), so two matches
+  /// of the same text are not `==`.
   TypedVal(TypedValue)
 }
 
