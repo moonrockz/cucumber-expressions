@@ -196,6 +196,28 @@ test "define_with: the checks of register apply" {
 }
 
 ///|
+test "define_with: the name is checked before the arity" {
+  let reg = ParamTypeRegistry::default()
+  let duplicate = try
+    reg.define2("int", [RegexPattern("\\d+")], (a, b) => a + b)
+  catch {
+    e => e.to_string()
+  } noraise {
+    _ => fail("expected an error")
+  }
+  inspect(duplicate, content="There is already a parameter type with name int")
+  let illegal = try reg.define1("a{b", [RegexPattern("(a)(b)")], s => s) catch {
+    e => e.to_string()
+  } noraise {
+    _ => fail("expected an error")
+  }
+  inspect(
+    illegal,
+    content="Illegal character in parameter name {a{b}. Parameter names may not contain '{', '}', '(', ')', '\\' or '/'",
+  )
+}
+
+///|
 test "define_with: a parse error in a part goes to the caller of match_" {
   let reg = ParamTypeRegistry::default()
   let _ = reg.define_with("num", [RegexPattern("\\w+")], Captures::int())

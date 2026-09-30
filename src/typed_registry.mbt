@@ -30,9 +30,7 @@ pub fn[T] ParamTypeRegistry::define_with(
   use_for_snippets? : Bool = true,
   prefer_for_regexp_match? : Bool = false,
 ) -> ParameterType[T] raise ParameterTypeError {
-  if regexps.is_empty() {
-    raise NoRegexps(name~)
-  }
+  self.check_name_and_regexps(name, regexps)
   let groups = count_capture_groups(name, regexps)
   let expected = captures.count
   let fits = if expected == 1 { groups <= 1 } else { groups == expected }
