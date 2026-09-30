@@ -248,6 +248,8 @@ pub suberror ParameterTypeError {
   MissingParameter(name~ : String)
   /// More than one parameter of the match has the type of the handle.
   AmbiguousParameter(name~ : String, count~ : Int)
+  /// A capture group of a typed parameter type did not match.
+  GroupDidNotMatch(name~ : String, index~ : Int)
 } derive(Debug)
 
 ///|
@@ -269,6 +271,8 @@ pub fn ParameterTypeError::message(self : ParameterTypeError) -> String {
     MissingParameter(name~) => "The match has no parameter of type {\{name}}"
     AmbiguousParameter(name~, count~) =>
       "The match has \{count} parameters of type {\{name}}; use get_all"
+    GroupDidNotMatch(name~, index~) =>
+      "Capture group \{index} of the parameter type {\{name}} did not match"
   }
 }
 

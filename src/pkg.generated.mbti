@@ -52,6 +52,7 @@ pub suberror ParameterTypeError {
   WrongParameterType(expected~ : String, actual~ : String)
   MissingParameter(name~ : String)
   AmbiguousParameter(name~ : String, count~ : Int)
+  GroupDidNotMatch(name~ : String, index~ : Int)
 } derive(@debug.Debug)
 pub fn ParameterTypeError::message(Self) -> String
 pub fn ParameterTypeError::output(Self, &Logger) -> Unit
@@ -61,6 +62,21 @@ pub fn ParameterTypeError::to_string(Self) -> String
 pub impl Show for ParameterTypeError
 
 // Types and methods
+pub enum Captures {
+}
+pub fn[T] Captures::custom((String) -> T raise) -> Captures1[T]
+pub fn Captures::double() -> Captures1[Double]
+pub fn Captures::float() -> Captures1[Double]
+pub fn Captures::int() -> Captures1[Int]
+pub fn Captures::long() -> Captures1[Int64]
+pub fn[T] Captures::optional(Captures1[T]) -> Captures1[T?]
+pub fn Captures::string() -> Captures1[String]
+
+pub struct Captures1[T] {
+  // private fields
+}
+pub fn[A, T] Captures1::map(Self[A], (A) -> T raise) -> Self[T]
+
 pub(all) struct CucumberExpressionGenerator {
   // private fields
 }
