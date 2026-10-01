@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#MISE description="Install git hooks with lefthook (the hooks call bd hooks run)"
+set -euo pipefail
+
+# lefthook owns the git hooks and calls `bd hooks run <hook>` (see
+# lefthook.yml), so reset any core.hooksPath override (for example .beads/hooks).
+exec lefthook install --reset-hooks-path
