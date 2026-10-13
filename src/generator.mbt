@@ -33,7 +33,7 @@ pub(all) struct GeneratedExpression {
 pub(all) struct ParameterInfo {
   type_ : ParamType
   name : String
-  count : Int
+  count : Int32
 } derive(Debug, Eq)
 
 ///|
@@ -65,7 +65,7 @@ pub fn GeneratedExpression::parameter_names(
 pub fn GeneratedExpression::parameter_infos(
   self : GeneratedExpression,
 ) -> Array[ParameterInfo] {
-  let usage : Map[String, Int] = Map([])
+  let usage : Map[String, Int32] = Map([])
   self.parameter_types.map(t => {
     let count = usage.get(t.name).unwrap_or(0) + 1
     usage[t.name] = count
@@ -111,7 +111,7 @@ pub fn CucumberExpressionGenerator::generate_expressions(
   }
   texts.push(escape_text(text.view(start_offset=pos)))
   let expressions : Array[GeneratedExpression] = []
-  fn permute(depth : Int, current : Array[ParamTypeEntry]) -> Unit {
+  fn permute(depth : Int32, current : Array[ParamTypeEntry]) -> Unit {
     if expressions.length() >= max_generated_expressions {
       return
     }
@@ -169,8 +169,8 @@ priv struct ParameterTypeMatcher {
   regexp : @regexp.Regexp
   text : String
   /// The start of the match, or -1 when there is no match.
-  start : Int
-  length : Int
+  start : Int32
+  length : Int32
 }
 
 ///|
@@ -178,7 +178,7 @@ fn ParameterTypeMatcher::new(
   entry : ParamTypeEntry,
   regexp : @regexp.Regexp,
   text : String,
-  position : Int,
+  position : Int32,
 ) -> ParameterTypeMatcher {
   let result = regexp.execute(text.view(start_offset=position))
   match result.get(0) {
@@ -197,7 +197,7 @@ fn ParameterTypeMatcher::new(
 ///|
 fn ParameterTypeMatcher::advance_to(
   self : ParameterTypeMatcher,
-  position : Int,
+  position : Int32,
 ) -> ParameterTypeMatcher {
   for p in position..<self.text.length() {
     let matcher = ParameterTypeMatcher::new(
@@ -231,7 +231,10 @@ fn ParameterTypeMatcher::find(self : ParameterTypeMatcher) -> Bool {
 
 ///|
 /// Sort matchers by position, then longest match first.
-fn compare_matchers(a : ParameterTypeMatcher, b : ParameterTypeMatcher) -> Int {
+fn compare_matchers(
+  a : ParameterTypeMatcher,
+  b : ParameterTypeMatcher,
+) -> Int32 {
   if a.start != b.start {
     return a.start - b.start
   }

@@ -1,5 +1,5 @@
 ///|
-fn strings(n : Int) -> Array[String?] {
+fn strings(n : Int32) -> Array[String?] {
   Array::makei(n, i => Some((i + 1).to_string()))
 }
 

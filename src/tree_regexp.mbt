@@ -9,8 +9,8 @@
 /// `start` and `end` are UTF-16 offsets into the matched text.
 pub(all) struct Group {
   value : String?
-  start : Int?
-  end : Int?
+  start : Int32?
+  end : Int32?
   children : Array[Group]
 } derive(Debug, Eq)
 
@@ -41,7 +41,7 @@ fn GroupBuilder::new() -> GroupBuilder {
 fn GroupBuilder::build(
   self : GroupBuilder,
   results : Array[StringView?],
-  next_index : Ref[Int],
+  next_index : Ref[Int32],
 ) -> Group {
   let index = next_index.val
   next_index.val = index + 1
@@ -64,7 +64,7 @@ fn GroupBuilder::build(
 /// True when the group that starts at `i` does not capture: `(?:X)`,
 /// `(?=X)`, `(?!X)`, `(?<=X)` and `(?<!X)`. A named group `(?<name>X)`
 /// captures.
-fn is_non_capturing(source : Array[Char], i : Int) -> Bool {
+fn is_non_capturing(source : Array[Char], i : Int32) -> Bool {
   if i + 1 >= source.length() || source[i + 1] != '?' {
     return false
   }
@@ -79,7 +79,7 @@ fn is_non_capturing(source : Array[Char], i : Int) -> Bool {
 fn create_group_builder(source : String) -> GroupBuilder? {
   let chars = source.to_array()
   let stack : Array[GroupBuilder] = [GroupBuilder::new()]
-  let starts : Array[Int] = []
+  let starts : Array[Int32] = []
   let mut escaping = false
   let mut char_class = false
   for i, c in chars {
@@ -118,7 +118,7 @@ fn create_group_builder(source : String) -> GroupBuilder? {
 
 ///|
 /// The number of capture groups in the tree.
-fn GroupBuilder::capture_count(self : GroupBuilder) -> Int {
+fn GroupBuilder::capture_count(self : GroupBuilder) -> Int32 {
   self.children.fold(init=0, (n, child) => n + 1 + child.capture_count())
 }
 

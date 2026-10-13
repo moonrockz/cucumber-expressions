@@ -8,8 +8,8 @@ pub fn[T] ParamTypeRegistry::define1(
   name : String,
   regexps : Array[RegexPattern],
   transformer : (String) -> T raise,
-  use_for_snippets? : Bool = true,
-  prefer_for_regexp_match? : Bool = false,
+  use_for_snippets~ : Bool = true,
+  prefer_for_regexp_match~ : Bool = false,
 ) -> ParameterType[T] raise ParameterTypeError {
   self.define_with(
     name,
@@ -28,8 +28,8 @@ pub fn[T] ParamTypeRegistry::define2(
   name : String,
   regexps : Array[RegexPattern],
   transformer : (String, String) -> T raise,
-  use_for_snippets? : Bool = true,
-  prefer_for_regexp_match? : Bool = false,
+  use_for_snippets~ : Bool = true,
+  prefer_for_regexp_match~ : Bool = false,
 ) -> ParameterType[T] raise ParameterTypeError {
   self.define_with(
     name,
@@ -48,8 +48,8 @@ pub fn[T] ParamTypeRegistry::define3(
   name : String,
   regexps : Array[RegexPattern],
   transformer : (String, String, String) -> T raise,
-  use_for_snippets? : Bool = true,
-  prefer_for_regexp_match? : Bool = false,
+  use_for_snippets~ : Bool = true,
+  prefer_for_regexp_match~ : Bool = false,
 ) -> ParameterType[T] raise ParameterTypeError {
   self.define_with(
     name,
@@ -71,8 +71,8 @@ pub fn[T] ParamTypeRegistry::define4(
   name : String,
   regexps : Array[RegexPattern],
   transformer : (String, String, String, String) -> T raise,
-  use_for_snippets? : Bool = true,
-  prefer_for_regexp_match? : Bool = false,
+  use_for_snippets~ : Bool = true,
+  prefer_for_regexp_match~ : Bool = false,
 ) -> ParameterType[T] raise ParameterTypeError {
   self.define_with(
     name,
@@ -95,8 +95,8 @@ pub fn[T] ParamTypeRegistry::define5(
   name : String,
   regexps : Array[RegexPattern],
   transformer : (String, String, String, String, String) -> T raise,
-  use_for_snippets? : Bool = true,
-  prefer_for_regexp_match? : Bool = false,
+  use_for_snippets~ : Bool = true,
+  prefer_for_regexp_match~ : Bool = false,
 ) -> ParameterType[T] raise ParameterTypeError {
   self.define_with(
     name,
@@ -120,8 +120,8 @@ pub fn[T] ParamTypeRegistry::define6(
   name : String,
   regexps : Array[RegexPattern],
   transformer : (String, String, String, String, String, String) -> T raise,
-  use_for_snippets? : Bool = true,
-  prefer_for_regexp_match? : Bool = false,
+  use_for_snippets~ : Bool = true,
+  prefer_for_regexp_match~ : Bool = false,
 ) -> ParameterType[T] raise ParameterTypeError {
   self.define_with(
     name,
@@ -146,8 +146,8 @@ pub fn[T] ParamTypeRegistry::define7(
   name : String,
   regexps : Array[RegexPattern],
   transformer : (String, String, String, String, String, String, String) -> T raise,
-  use_for_snippets? : Bool = true,
-  prefer_for_regexp_match? : Bool = false,
+  use_for_snippets~ : Bool = true,
+  prefer_for_regexp_match~ : Bool = false,
 ) -> ParameterType[T] raise ParameterTypeError {
   self.define_with(
     name,
@@ -173,8 +173,8 @@ pub fn[T] ParamTypeRegistry::define8(
   name : String,
   regexps : Array[RegexPattern],
   transformer : (String, String, String, String, String, String, String, String) -> T raise,
-  use_for_snippets? : Bool = true,
-  prefer_for_regexp_match? : Bool = false,
+  use_for_snippets~ : Bool = true,
+  prefer_for_regexp_match~ : Bool = false,
 ) -> ParameterType[T] raise ParameterTypeError {
   self.define_with(
     name,

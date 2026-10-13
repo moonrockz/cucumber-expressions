@@ -3,7 +3,7 @@
 fn count_capture_groups(
   name : String,
   regexps : Array[RegexPattern],
-) -> Int raise ParameterTypeError {
+) -> Int32 raise ParameterTypeError {
   let mut total = 0
   for regexp in regexps {
     guard create_group_builder(regexp.to_string()) is Some(builder) else {
@@ -34,8 +34,8 @@ pub fn[T] ParamTypeRegistry::define_with(
   name : String,
   regexps : Array[RegexPattern],
   captures : Captures1[T],
-  use_for_snippets? : Bool = true,
-  prefer_for_regexp_match? : Bool = false,
+  use_for_snippets~ : Bool = true,
+  prefer_for_regexp_match~ : Bool = false,
 ) -> ParameterType[T] raise ParameterTypeError {
   self.check_name_and_regexps(name, regexps)
   let groups = count_capture_groups(name, regexps)

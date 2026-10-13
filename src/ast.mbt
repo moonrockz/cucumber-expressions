@@ -25,8 +25,8 @@ pub(all) struct Node {
   type_ : NodeType
   nodes : Array[Node]
   token : String
-  start : Int
-  end : Int
+  start : Int32
+  end : Int32
 } derive(Debug, Eq, ToJson, FromJson)
 
 ///|

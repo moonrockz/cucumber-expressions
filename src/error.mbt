@@ -6,18 +6,18 @@
 /// implementation.
 pub suberror ExpressionError {
   /// A `{` has no matching `}`.
-  UnmatchedBrace(position~ : Int, message~ : String)
+  UnmatchedBrace(position~ : Int32, message~ : String)
   /// A `(` has no matching `)`.
-  UnmatchedParen(position~ : Int, message~ : String)
+  UnmatchedParen(position~ : Int32, message~ : String)
   /// A character that can not be escaped follows a `\`.
-  CannotEscape(position~ : Int, character~ : Char, message~ : String)
+  CannotEscape(position~ : Int32, character~ : Char, message~ : String)
   /// The expression ends with a `\`.
-  UnexpectedEscapeEnd(position~ : Int, message~ : String)
+  UnexpectedEscapeEnd(position~ : Int32, message~ : String)
   /// The expression has a structure that is not permitted, for example an
   /// optional inside an optional.
-  ValidationError(position~ : Int, message~ : String)
+  ValidationError(position~ : Int32, message~ : String)
   /// The expression uses a parameter type that is not registered.
-  UnknownParameterType(name~ : String, position~ : Int, message~ : String)
+  UnknownParameterType(name~ : String, position~ : Int32, message~ : String)
 } derive(Debug)
 
 ///|
@@ -35,7 +35,7 @@ pub fn ExpressionError::message(self : ExpressionError) -> String {
 
 ///|
 /// The code point offset of the problem in the expression.
-pub fn ExpressionError::position(self : ExpressionError) -> Int {
+pub fn ExpressionError::position(self : ExpressionError) -> Int32 {
   match self {
     UnmatchedBrace(position~, ..)
     | UnmatchedParen(position~, ..)
@@ -57,7 +57,7 @@ pub extend ExpressionError with Show::{to_string, output}
 ///|
 /// Build a message in the reference format.
 fn error_message(
-  index : Int,
+  index : Int32,
   expression : String,
   pointer : String,
   problem : String,
@@ -67,12 +67,12 @@ fn error_message(
 }
 
 ///|
-fn point_at(index : Int) -> String {
+fn point_at(index : Int32) -> String {
   " ".repeat(index) + "^"
 }
 
 ///|
-fn point_at_range(start : Int, end : Int) -> String {
+fn point_at_range(start : Int32, end : Int32) -> String {
   let buf = StringBuilder()
   buf.write_string(point_at(start))
   if start + 1 < end {
@@ -83,7 +83,7 @@ fn point_at_range(start : Int, end : Int) -> String {
 }
 
 ///|
-fn cant_escape_error(expression : String, index : Int) -> ExpressionError {
+fn cant_escape_error(expression : String, index : Int32) -> ExpressionError {
   let chars = expression.to_array()
   CannotEscape(
     position=index,
@@ -247,17 +247,17 @@ pub suberror ParameterTypeError {
   /// No parameter of the match has the type of the handle.
   MissingParameter(name~ : String)
   /// More than one parameter of the match has the type of the handle.
-  AmbiguousParameter(name~ : String, count~ : Int)
+  AmbiguousParameter(name~ : String, count~ : Int32)
   /// A capture group of a typed parameter type did not match.
-  GroupDidNotMatch(name~ : String, index~ : Int)
+  GroupDidNotMatch(name~ : String, index~ : Int32)
   /// The decoder of a typed parameter type takes a different number of
   /// values than its regexps have capture groups.
-  ArityMismatch(name~ : String, expected~ : Int, groups~ : Int)
+  ArityMismatch(name~ : String, expected~ : Int32, groups~ : Int32)
   /// A regexp of a typed parameter type has parentheses that do not balance.
   InvalidRegexp(name~ : String, regexp~ : String)
   /// The decoder of a typed parameter type got a different number of
   /// values than it decodes.
-  WrongGroupCount(name~ : String, expected~ : Int, actual~ : Int)
+  WrongGroupCount(name~ : String, expected~ : Int32, actual~ : Int32)
 } derive(Debug)
 
 ///|
@@ -292,7 +292,7 @@ pub fn ParameterTypeError::message(self : ParameterTypeError) -> String {
 
 ///|
 /// `count` with "capture group" or "capture groups".
-fn capture_groups(count : Int) -> String {
+fn capture_groups(count : Int32) -> String {
   if count == 1 {
     "1 capture group"
   } else {

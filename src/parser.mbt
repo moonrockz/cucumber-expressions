@@ -25,7 +25,7 @@ priv enum Rule {
 
 ///|
 priv struct ParseResult {
-  consumed : Int
+  consumed : Int32
   ast : Array[Node]
 }
 
@@ -54,7 +54,7 @@ pub fn parse_expression(expression : String) -> Node raise ExpressionError {
 }
 
 ///|
-fn Parser::looking_at(self : Parser, at : Int, type_ : TokenType) -> Bool {
+fn Parser::looking_at(self : Parser, at : Int32, type_ : TokenType) -> Bool {
   if at < 0 {
     return type_ == StartOfLine
   }
@@ -67,7 +67,7 @@ fn Parser::looking_at(self : Parser, at : Int, type_ : TokenType) -> Bool {
 ///|
 fn Parser::looking_at_any(
   self : Parser,
-  at : Int,
+  at : Int32,
   types : Array[TokenType],
 ) -> Bool {
   types.iter().any(t => self.looking_at(at, t))
@@ -82,7 +82,7 @@ fn nothing() -> ParseResult {
 fn Parser::parse_rule(
   self : Parser,
   rule : Rule,
-  current : Int,
+  current : Int32,
 ) -> ParseResult raise ExpressionError {
   match rule {
     TextRule => self.parse_text(current)
@@ -122,7 +122,7 @@ fn text_node(token : Token) -> Node {
 ///|
 fn Parser::parse_text(
   self : Parser,
-  current : Int,
+  current : Int32,
 ) -> ParseResult raise ExpressionError {
   let token = self.tokens[current]
   match token.type_ {
@@ -136,7 +136,7 @@ fn Parser::parse_text(
 ///|
 fn Parser::parse_name(
   self : Parser,
-  current : Int,
+  current : Int32,
 ) -> ParseResult raise ExpressionError {
   let token = self.tokens[current]
   match token.type_ {
@@ -150,7 +150,7 @@ fn Parser::parse_name(
 ///|
 fn Parser::parse_alternative_separator(
   self : Parser,
-  current : Int,
+  current : Int32,
 ) -> ParseResult {
   if !self.looking_at(current, Alternation) {
     return nothing()
@@ -173,7 +173,7 @@ fn Parser::parse_alternative_separator(
 ///|
 fn Parser::parse_alternation(
   self : Parser,
-  current : Int,
+  current : Int32,
 ) -> ParseResult raise ExpressionError {
   if !self.looking_at_any(current - 1, [StartOfLine, WhiteSpace, EndParameter]) {
     return nothing()
@@ -211,7 +211,7 @@ fn Parser::parse_between(
   begin : TokenType,
   end : TokenType,
   rules : Array[Rule],
-  current : Int,
+  current : Int32,
 ) -> ParseResult raise ExpressionError {
   if !self.looking_at(current, begin) {
     return nothing()
@@ -245,7 +245,7 @@ fn Parser::parse_between(
 fn Parser::parse_token(
   self : Parser,
   rules : Array[Rule],
-  start_at : Int,
+  start_at : Int32,
 ) -> ParseResult raise ExpressionError {
   for rule in rules {
     let result = self.parse_rule(rule, start_at)
@@ -261,7 +261,7 @@ fn Parser::parse_token(
 fn Parser::parse_tokens_until(
   self : Parser,
   rules : Array[Rule],
-  start_at : Int,
+  start_at : Int32,
   end_types : Array[TokenType],
 ) -> ParseResult raise ExpressionError {
   let mut current = start_at
@@ -281,8 +281,8 @@ fn Parser::parse_tokens_until(
 /// Split the nodes of an alternation at the separators into alternative
 /// nodes.
 fn split_alternatives(
-  start : Int,
-  end : Int,
+  start : Int32,
+  end : Int32,
   alternation : Array[Node],
 ) -> Array[Node] {
   let separators : Array[Node] = []

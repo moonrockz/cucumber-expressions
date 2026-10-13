@@ -247,7 +247,7 @@ fn generator() -> (ParamTypeRegistry, CucumberExpressionGenerator) {
 fn assert_generated(
   reg : ParamTypeRegistry,
   expected : String,
-  infos : Array[(String, Int)],
+  infos : Array[(String, Int32)],
   text : String,
 ) -> Unit raise {
   let generated = CucumberExpressionGenerator::new(reg).generate_expressions(
