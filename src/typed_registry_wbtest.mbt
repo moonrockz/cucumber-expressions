@@ -1,7 +1,7 @@
 ///|
 priv struct Coord {
-  x : Int
-  y : Int
+  x : Int32
+  y : Int32
 } derive(Debug)
 
 ///|

@@ -156,7 +156,7 @@ fn has_text(node : Node) -> Bool {
 /// Parse a cucumber expression and compile it to a regex pattern string.
 pub fn compile_expression(
   expression : String,
-  registry? : ParamTypeRegistry = ParamTypeRegistry::default(),
+  registry~ : ParamTypeRegistry = ParamTypeRegistry::default(),
 ) -> String raise ExpressionError {
   let ast = parse_expression(expression)
   compile_ast(expression, ast, registry).regex

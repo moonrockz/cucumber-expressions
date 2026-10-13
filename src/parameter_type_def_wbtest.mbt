@@ -20,8 +20,8 @@ impl FromGroups1 for Colour with fn from_groups(name) {
 
 ///|
 priv struct Point {
-  x : Int
-  y : Int
+  x : Int32
+  y : Int32
 } derive(Debug)
 
 ///|

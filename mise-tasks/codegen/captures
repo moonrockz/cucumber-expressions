@@ -149,8 +149,8 @@ pub fn[T] ParamTypeRegistry::define{n}(
   name : String,
   regexps : Array[RegexPattern],
   transformer : ({arg_types}) -> T raise,
-  use_for_snippets? : Bool = true,
-  prefer_for_regexp_match? : Bool = false,
+  use_for_snippets~ : Bool = true,
+  prefer_for_regexp_match~ : Bool = false,
 ) -> ParameterType[T] raise ParameterTypeError {{
   self.define_with(
     name,

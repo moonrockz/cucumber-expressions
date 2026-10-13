@@ -10,7 +10,7 @@ pub enum Captures {}
 ///|
 /// A capture group that did not match, with its 1-based index.
 priv suberror MissingGroup {
-  MissingGroup(Int)
+  MissingGroup(Int32)
 }
 
 ///|
@@ -19,8 +19,8 @@ priv suberror MissingGroup {
 /// `count` is the number of capture groups it decodes. `decode` gets the
 /// values of those groups and the 1-based index of the first one.
 pub struct Captures1[T] {
-  priv count : Int
-  priv decode : (ArrayView[String?], Int) -> T raise
+  priv count : Int32
+  priv decode : (ArrayView[String?], Int32) -> T raise
 }
 
 ///|
@@ -45,7 +45,7 @@ pub fn Captures::string() -> Captures1[String] {
 
 ///|
 /// The capture group as an `Int`.
-pub fn Captures::int() -> Captures1[Int] {
+pub fn Captures::int() -> Captures1[Int32] {
   Captures1::part(text => @string.parse_int(text))
 }
 

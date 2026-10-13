@@ -16,7 +16,7 @@ pub(all) struct RegularExpression {
 /// valid.
 pub fn RegularExpression::new(
   regexp : String,
-  registry? : ParamTypeRegistry = ParamTypeRegistry::default(),
+  registry~ : ParamTypeRegistry = ParamTypeRegistry::default(),
 ) -> RegularExpression raise ExpressionError {
   let tree_regexp = TreeRegexp::new(regexp, on_error=detail => {
     ValidationError(

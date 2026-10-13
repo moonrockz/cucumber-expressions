@@ -41,15 +41,15 @@ fn conformance_text(value : ParamValue) -> String? {
 ///|
 fn conformance_node(
   type_ : NodeType,
-  start : Int,
-  end : Int,
+  start : Int32,
+  end : Int32,
   nodes : Array[Node],
 ) -> Node {
   { type_, nodes, token: "", start, end, }
 }
 
 ///|
-fn conformance_text_node(token : String, start : Int, end : Int) -> Node {
+fn conformance_text_node(token : String, start : Int32, end : Int32) -> Node {
   { type_: TextNode, nodes: [], token, start, end, }
 }
 

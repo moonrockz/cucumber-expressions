@@ -219,11 +219,11 @@ pub fn ParamTypeRegistry::register(
   name : String,
   type_ : ParamType,
   patterns : Array[RegexPattern],
-  transformer? : Transformer = Transformer::new(fn(groups) {
+  transformer~ : Transformer = Transformer::new(fn(groups) {
     ParamValue::StringVal(groups[0])
   }),
-  use_for_snippets? : Bool = true,
-  prefer_for_regexp_match? : Bool = false,
+  use_for_snippets~ : Bool = true,
+  prefer_for_regexp_match~ : Bool = false,
 ) -> Unit raise ParameterTypeError {
   self.check_name_and_regexps(name, patterns)
   if prefer_for_regexp_match {
@@ -275,8 +275,8 @@ fn ParamTypeRegistry::add_entry(
   type_ : ParamType,
   patterns : Array[RegexPattern],
   transformer~ : Transformer,
-  use_for_snippets? : Bool = true,
-  prefer_for_regexp_match? : Bool = false,
+  use_for_snippets~ : Bool = true,
+  prefer_for_regexp_match~ : Bool = false,
 ) -> Unit {
   self.entries.push({
     name,
@@ -290,7 +290,7 @@ fn ParamTypeRegistry::add_entry(
 
 ///|
 /// Order parameter types: preferential types first, then by name.
-fn compare_parameter_types(a : ParamTypeEntry, b : ParamTypeEntry) -> Int {
+fn compare_parameter_types(a : ParamTypeEntry, b : ParamTypeEntry) -> Int32 {
   if a.prefer_for_regexp_match && !b.prefer_for_regexp_match {
     return -1
   }
@@ -303,7 +303,7 @@ fn compare_parameter_types(a : ParamTypeEntry, b : ParamTypeEntry) -> Int {
 ///|
 /// Compare strings character by character. `String::compare` compares the
 /// length first, which is not the order that the reference uses.
-fn compare_text(a : String, b : String) -> Int {
+fn compare_text(a : String, b : String) -> Int32 {
   let length = if a.length() < b.length() { a.length() } else { b.length() }
   for i in 0..<length {
     let c = a.code_unit_at(i).to_int() - b.code_unit_at(i).to_int()
@@ -386,9 +386,9 @@ fn is_valid_parameter_type_name(name : String) -> Bool {
 fn parse_int_in_range(
   text : String,
   type_name : String,
-  min : Int,
-  max : Int,
-) -> Int raise {
+  min : Int32,
+  max : Int32,
+) -> Int32 raise {
   let n = @string.parse_int(text)
   if n < min || n > max {
     raise Failure::Failure(

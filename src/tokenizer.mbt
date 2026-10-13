@@ -20,8 +20,8 @@ pub(all) enum TokenType {
 pub(all) struct Token {
   type_ : TokenType
   text : String
-  start : Int
-  end : Int
+  start : Int32
+  end : Int32
 } derive(Debug, Eq, ToJson, FromJson)
 
 ///|

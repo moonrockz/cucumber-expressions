@@ -2,12 +2,12 @@
 /// A typed value produced by a transformer function.
 /// Built-in types have concrete variants for compile-time pattern matching.
 pub(all) enum ParamValue {
-  IntVal(Int)
+  IntVal(Int32)
   FloatVal(Double)
   DoubleVal(Double)
   LongVal(Int64)
   ByteVal(Byte)
-  ShortVal(Int)
+  ShortVal(Int32)
   StringVal(String)
   WordVal(String)
   AnonymousVal(String)
