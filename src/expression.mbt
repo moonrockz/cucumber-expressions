@@ -8,9 +8,10 @@ pub(all) struct Expression {
 
 ///|
 /// A successful match result with extracted parameters.
+#derive(Debug, Eq)
 pub(all) struct Match {
   params : Array[Param]
-} derive(Debug, Eq)
+}
 
 ///|
 /// An extracted parameter value.
@@ -18,12 +19,13 @@ pub(all) struct Match {
 /// `raw` is the matched text. For `{string}` it is the text between the
 /// quotes, before the escaped quotes are changed. `group` is the capture
 /// group of the parameter, with its position and the groups inside it.
+#derive(Debug, Eq)
 pub(all) struct Param {
   value : ParamValue
   type_ : ParamType
   raw : String
   group : Group
-} derive(Debug, Eq)
+}
 
 ///|
 /// Parse a cucumber expression with the default parameter type registry.
@@ -98,8 +100,7 @@ fn raw_text(type_ : ParamType, group : Group) -> String {
       (s.has_prefix("'") && s.has_suffix("'"))
     )
   match type_ {
-    String_ if quoted =>
-      s.view(start_offset=1, end_offset=s.length() - 1).to_owned()
+    String_ if quoted => s[1:s.length() - 1].to_owned()
     _ => s
   }
 }

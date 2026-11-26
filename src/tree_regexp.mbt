@@ -7,12 +7,13 @@
 ///
 /// `value`, `start` and `end` are `None` when the group did not match.
 /// `start` and `end` are UTF-16 offsets into the matched text.
+#derive(Debug, Eq)
 pub(all) struct Group {
   value : String?
   start : Int32?
   end : Int32?
   children : Array[Group]
-} derive(Debug, Eq)
+}
 
 ///|
 /// The values that a transformer gets: the values of the child groups, or
@@ -137,7 +138,7 @@ fn TreeRegexp::new(
   source : String,
   on_error~ : (String) -> ExpressionError,
 ) -> TreeRegexp raise ExpressionError {
-  let regexp = @regexp.compile(source.view()) catch {
+  let regexp = @regexp.compile(source) catch {
     e => raise on_error(e.to_string())
   }
   guard create_group_builder(source) is Some(group_builder) &&
@@ -150,7 +151,7 @@ fn TreeRegexp::new(
 ///|
 /// Match the text. The result is the group of the whole match.
 fn TreeRegexp::match_(self : TreeRegexp, text : String) -> Group? {
-  guard self.regexp.match_(text.view()) is Some(result) else { return None }
+  guard self.regexp.match_(text) is Some(result) else { return None }
   Some(self.group_builder.build(result.results(), { val: 0, }))
 }
 

@@ -30,11 +30,12 @@ pub(all) struct GeneratedExpression {
 /// The name and type of a parameter of a generated expression. `count` is
 /// the number of times that the name is used up to and including this
 /// parameter.
+#derive(Debug, Eq)
 pub(all) struct ParameterInfo {
   type_ : ParamType
   name : String
   count : Int32
-} derive(Debug, Eq)
+}
 
 ///|
 /// The text of the generated expression.
@@ -103,13 +104,13 @@ pub fn CucumberExpressionGenerator::generate_expressions(
     }
     types.sort_by(compare_parameter_types)
     combinations.push(types)
-    texts.push(escape_text(text.view(start_offset=pos, end_offset=best.start)))
+    texts.push(escape_text(text[pos:best.start]))
     pos = best.start + best.length
     if pos >= text.length() {
       break
     }
   }
-  texts.push(escape_text(text.view(start_offset=pos)))
+  texts.push(escape_text(text[pos:]))
   let expressions : Array[GeneratedExpression] = []
   fn permute(depth : Int32, current : Array[ParamTypeEntry]) -> Unit {
     if expressions.length() >= max_generated_expressions {
@@ -180,7 +181,7 @@ fn ParameterTypeMatcher::new(
   text : String,
   position : Int32,
 ) -> ParameterTypeMatcher {
-  let result = regexp.execute(text.view(start_offset=position))
+  let result = regexp.execute(text[position:])
   match result.get(0) {
     Some(view) if result.matched() =>
       {

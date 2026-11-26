@@ -1,5 +1,6 @@
 ///|
 /// The kind of a node in a cucumber expression AST.
+#derive(Debug, Eq, ToJson, FromJson)
 pub(all) enum NodeType {
   /// Literal text. The text is in `Node::token`.
   TextNode
@@ -13,7 +14,7 @@ pub(all) enum NodeType {
   ParameterNode
   /// The root node of an expression.
   ExpressionNode
-} derive(Debug, Eq, ToJson, FromJson)
+}
 
 ///|
 /// A node in a cucumber expression AST.
@@ -21,13 +22,14 @@ pub(all) enum NodeType {
 /// `start` and `end` are code point offsets into the expression. A
 /// `TextNode` has a `token` and no `nodes`. All other nodes have `nodes`
 /// and an empty `token`.
+#derive(Debug, Eq, ToJson, FromJson)
 pub(all) struct Node {
   type_ : NodeType
   nodes : Array[Node]
   token : String
   start : Int32
   end : Int32
-} derive(Debug, Eq, ToJson, FromJson)
+}
 
 ///|
 /// The text of this node: the token of a text node, or the joined text of

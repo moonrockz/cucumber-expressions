@@ -1,8 +1,9 @@
 ///|
+#derive(Debug)
 priv struct Coord {
   x : Int32
   y : Int32
-} derive(Debug)
+}
 
 ///|
 fn match_one(

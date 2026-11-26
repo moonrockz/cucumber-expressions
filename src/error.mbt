@@ -4,6 +4,7 @@
 /// `position` is the code point offset of the problem in the expression.
 /// `message` is the full message, in the same format as the reference
 /// implementation.
+#derive(Debug)
 pub suberror ExpressionError {
   /// A `{` has no matching `}`.
   UnmatchedBrace(position~ : Int32, message~ : String)
@@ -18,7 +19,7 @@ pub suberror ExpressionError {
   ValidationError(position~ : Int32, message~ : String)
   /// The expression uses a parameter type that is not registered.
   UnknownParameterType(name~ : String, position~ : Int32, message~ : String)
-} derive(Debug)
+}
 
 ///|
 /// The full error message.
@@ -229,6 +230,7 @@ pub extend ExpressionError with @debug.Debug::{to_repr}
 
 ///|
 /// Errors that can occur when a parameter type is registered.
+#derive(Debug)
 pub suberror ParameterTypeError {
   /// A parameter type with the name is already registered.
   DuplicateParameterType(name~ : String)
@@ -240,7 +242,7 @@ pub suberror ParameterTypeError {
   DuplicatePreferentialParameterType(
     regexp~ : String,
     first~ : String,
-    second~ : String
+    second~ : String,
   )
   /// A typed handle was used on a parameter of another type.
   WrongParameterType(expected~ : String, actual~ : String)
@@ -258,7 +260,7 @@ pub suberror ParameterTypeError {
   /// The decoder of a typed parameter type got a different number of
   /// values than it decodes.
   WrongGroupCount(name~ : String, expected~ : Int32, actual~ : Int32)
-} derive(Debug)
+}
 
 ///|
 /// The error message.
@@ -315,14 +317,15 @@ pub extend ParameterTypeError with @debug.Debug::{to_repr}
 ///|
 /// A capture group of a regular expression matches more than one parameter
 /// type, and none of them is preferential.
+#derive(Debug)
 pub suberror AmbiguousParameterTypeError {
   AmbiguousParameterType(
     regexp~ : String,
     expression_regexp~ : String,
     names~ : Array[String],
-    generated~ : Array[String]
+    generated~ : Array[String],
   )
-} derive(Debug)
+}
 
 ///|
 /// The error message, in the same format as the reference implementation.
