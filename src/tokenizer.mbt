@@ -1,5 +1,6 @@
 ///|
 /// The kind of a token in a cucumber expression.
+#derive(Debug, Eq, ToJson, FromJson)
 pub(all) enum TokenType {
   StartOfLine
   EndOfLine
@@ -10,19 +11,20 @@ pub(all) enum TokenType {
   EndParameter
   Alternation
   Text
-} derive(Debug, Eq, ToJson, FromJson)
+}
 
 ///|
 /// A token of a cucumber expression.
 ///
 /// `start` and `end` are code point offsets into the expression. For a text
 /// token, the range includes the escape characters, but `text` does not.
+#derive(Debug, Eq, ToJson, FromJson)
 pub(all) struct Token {
   type_ : TokenType
   text : String
   start : Int32
   end : Int32
-} derive(Debug, Eq, ToJson, FromJson)
+}
 
 ///|
 let escape_character : Char = '\\'

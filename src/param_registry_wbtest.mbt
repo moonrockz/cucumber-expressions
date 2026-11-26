@@ -276,7 +276,7 @@ test "range error message has no source location (#11)" {
   inspect(
     message,
     content=(
-      #|Failure(128 is out of range for {byte}: -128..127)
+      #|Failure: 128 is out of range for {byte}: -128..127
     ),
   )
 }

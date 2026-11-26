@@ -1,8 +1,9 @@
 ///|
 /// A regex pattern used for matching parameter types in cucumber expressions.
+#derive(Debug, Eq)
 pub(all) struct RegexPattern {
   priv value : String
-} derive(Debug, Eq)
+}
 
 ///|
 pub fn RegexPattern::RegexPattern(value : String) -> RegexPattern {
@@ -16,6 +17,7 @@ pub fn RegexPattern::to_string(self : RegexPattern) -> String {
 
 ///|
 /// Parameter types supported by cucumber expressions.
+#derive(Debug, Eq, ToJson, FromJson)
 pub(all) enum ParamType {
   Int
   Float
@@ -29,7 +31,7 @@ pub(all) enum ParamType {
   BigDecimal
   BigInteger
   Custom(String)
-} derive(Debug, Eq, ToJson, FromJson)
+}
 
 ///|
 /// A registered parameter type entry with name, type, regex patterns, and transformer.
@@ -37,6 +39,7 @@ pub(all) enum ParamType {
 /// `use_for_snippets` is true when `CucumberExpressionGenerator` can use the
 /// type. `prefer_for_regexp_match` is true when a `RegularExpression` uses
 /// this type before other types with the same regexp.
+#derive(Debug)
 pub(all) struct ParamTypeEntry {
   name : String
   type_ : ParamType
@@ -44,7 +47,7 @@ pub(all) struct ParamTypeEntry {
   transformer : Transformer
   use_for_snippets : Bool
   prefer_for_regexp_match : Bool
-} derive(Debug)
+}
 
 ///|
 pub impl Eq for ParamTypeEntry with fn equal(self, other) -> Bool {
@@ -114,8 +117,8 @@ pub fn ParamTypeRegistry::default() -> ParamTypeRegistry {
     "biginteger",
     ParamType::BigInteger,
     int_patterns,
-    transformer=Transformer::new(fn(groups) {
-      BigIntegerVal(BigInt::from_string(groups[0]))
+    transformer=Transformer::new(fn(groups) raise {
+      BigIntegerVal(@string.parse_bigint(groups[0]))
     }),
     use_for_snippets=false,
     prefer_for_regexp_match=false,

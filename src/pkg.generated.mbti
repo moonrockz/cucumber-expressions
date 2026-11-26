@@ -18,9 +18,10 @@ pub fn tokenize(String) -> Array[Token] raise ExpressionError
 pub fn version() -> String
 
 // Errors
+#derive(@debug.Debug)
 pub suberror AmbiguousParameterTypeError {
   AmbiguousParameterType(regexp~ : String, expression_regexp~ : String, names~ : Array[String], generated~ : Array[String])
-} derive(@debug.Debug)
+}
 pub fn AmbiguousParameterTypeError::message(Self) -> String
 pub fn AmbiguousParameterTypeError::output(Self, &Logger) -> Unit
 #deprecated
@@ -28,22 +29,24 @@ pub fn AmbiguousParameterTypeError::to_repr(Self) -> @debug.Repr
 pub fn AmbiguousParameterTypeError::to_string(Self) -> String
 pub impl Show for AmbiguousParameterTypeError
 
+#derive(@debug.Debug)
 pub suberror ExpressionError {
-  UnmatchedBrace(position~ : Int, message~ : String)
-  UnmatchedParen(position~ : Int, message~ : String)
-  CannotEscape(position~ : Int, character~ : Char, message~ : String)
-  UnexpectedEscapeEnd(position~ : Int, message~ : String)
-  ValidationError(position~ : Int, message~ : String)
-  UnknownParameterType(name~ : String, position~ : Int, message~ : String)
-} derive(@debug.Debug)
+  UnmatchedBrace(position~ : Int32, message~ : String)
+  UnmatchedParen(position~ : Int32, message~ : String)
+  CannotEscape(position~ : Int32, character~ : Char, message~ : String)
+  UnexpectedEscapeEnd(position~ : Int32, message~ : String)
+  ValidationError(position~ : Int32, message~ : String)
+  UnknownParameterType(name~ : String, position~ : Int32, message~ : String)
+}
 pub fn ExpressionError::message(Self) -> String
 pub fn ExpressionError::output(Self, &Logger) -> Unit
-pub fn ExpressionError::position(Self) -> Int
+pub fn ExpressionError::position(Self) -> Int32
 #deprecated
 pub fn ExpressionError::to_repr(Self) -> @debug.Repr
 pub fn ExpressionError::to_string(Self) -> String
 pub impl Show for ExpressionError
 
+#derive(@debug.Debug)
 pub suberror ParameterTypeError {
   DuplicateParameterType(name~ : String)
   IllegalParameterName(name~ : String)
@@ -51,12 +54,12 @@ pub suberror ParameterTypeError {
   DuplicatePreferentialParameterType(regexp~ : String, first~ : String, second~ : String)
   WrongParameterType(expected~ : String, actual~ : String)
   MissingParameter(name~ : String)
-  AmbiguousParameter(name~ : String, count~ : Int)
-  GroupDidNotMatch(name~ : String, index~ : Int)
-  ArityMismatch(name~ : String, expected~ : Int, groups~ : Int)
+  AmbiguousParameter(name~ : String, count~ : Int32)
+  GroupDidNotMatch(name~ : String, index~ : Int32)
+  ArityMismatch(name~ : String, expected~ : Int32, groups~ : Int32)
   InvalidRegexp(name~ : String, regexp~ : String)
-  WrongGroupCount(name~ : String, expected~ : Int, actual~ : Int)
-} derive(@debug.Debug)
+  WrongGroupCount(name~ : String, expected~ : Int32, actual~ : Int32)
+}
 pub fn ParameterTypeError::message(Self) -> String
 pub fn ParameterTypeError::output(Self, &Logger) -> Unit
 #deprecated
@@ -70,7 +73,7 @@ pub enum Captures {
 pub fn[T] Captures::custom((String) -> T raise) -> Captures1[T]
 pub fn Captures::double() -> Captures1[Double]
 pub fn Captures::float() -> Captures1[Double]
-pub fn Captures::int() -> Captures1[Int]
+pub fn Captures::int() -> Captures1[Int32]
 pub fn Captures::long() -> Captures1[Int64]
 pub fn[T] Captures::optional(Captures1[T]) -> Captures1[T?]
 pub fn Captures::string() -> Captures1[String]
@@ -152,12 +155,13 @@ pub fn GeneratedExpression::parameter_infos(Self) -> Array[ParameterInfo]
 pub fn GeneratedExpression::parameter_names(Self) -> Array[String]
 pub fn GeneratedExpression::source(Self) -> String
 
+#derive(Eq, @debug.Debug)
 pub(all) struct Group {
   value : String?
-  start : Int?
-  end : Int?
+  start : Int32?
+  end : Int32?
   children : Array[Group]
-} derive(Eq, @debug.Debug)
+}
 #deprecated
 pub fn Group::equal(Self, Self) -> Bool
 #deprecated
@@ -166,9 +170,10 @@ pub fn Group::not_equal(Self, Self) -> Bool
 pub fn Group::to_repr(Self) -> @debug.Repr
 pub fn Group::values(Self) -> Array[String?]
 
+#derive(Eq, @debug.Debug)
 pub(all) struct Match {
   params : Array[Param]
-} derive(Eq, @debug.Debug)
+}
 #deprecated
 pub fn Match::equal(Self, Self) -> Bool
 pub fn[T] Match::get(Self, ParameterType[T]) -> T raise ParameterTypeError
@@ -178,23 +183,25 @@ pub fn Match::not_equal(Self, Self) -> Bool
 #deprecated
 pub fn Match::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.FromJson, @json.ToJson)
 pub(all) struct Node {
   type_ : NodeType
   nodes : Array[Node]
   token : String
-  start : Int
-  end : Int
-} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+  start : Int32
+  end : Int32
+}
 #deprecated
 pub fn Node::equal(Self, Self) -> Bool
-pub fn Node::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Node::from_json(@json.Json, @json.DecodeContext) -> Self raise @json.JsonDecodeError
 #deprecated
 pub fn Node::not_equal(Self, Self) -> Bool
 pub fn Node::text(Self) -> String
-pub fn Node::to_json(Self) -> Json
+pub fn Node::to_json(Self) -> @json.Json
 #deprecated
 pub fn Node::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.FromJson, @json.ToJson)
 pub(all) enum NodeType {
   TextNode
   OptionalNode
@@ -202,22 +209,23 @@ pub(all) enum NodeType {
   AlternativeNode
   ParameterNode
   ExpressionNode
-} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+}
 #deprecated
 pub fn NodeType::equal(Self, Self) -> Bool
-pub fn NodeType::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn NodeType::from_json(@json.Json, @json.DecodeContext) -> Self raise @json.JsonDecodeError
 #deprecated
 pub fn NodeType::not_equal(Self, Self) -> Bool
-pub fn NodeType::to_json(Self) -> Json
+pub fn NodeType::to_json(Self) -> @json.Json
 #deprecated
 pub fn NodeType::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug)
 pub(all) struct Param {
   value : ParamValue
   type_ : ParamType
   raw : String
   group : Group
-} derive(Eq, @debug.Debug)
+}
 #deprecated
 pub fn Param::equal(Self, Self) -> Bool
 #deprecated
@@ -225,6 +233,7 @@ pub fn Param::not_equal(Self, Self) -> Bool
 #deprecated
 pub fn Param::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.FromJson, @json.ToJson)
 pub(all) enum ParamType {
   Int
   Float
@@ -238,16 +247,17 @@ pub(all) enum ParamType {
   BigDecimal
   BigInteger
   Custom(String)
-} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+}
 #deprecated
 pub fn ParamType::equal(Self, Self) -> Bool
-pub fn ParamType::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ParamType::from_json(@json.Json, @json.DecodeContext) -> Self raise @json.JsonDecodeError
 #deprecated
 pub fn ParamType::not_equal(Self, Self) -> Bool
-pub fn ParamType::to_json(Self) -> Json
+pub fn ParamType::to_json(Self) -> @json.Json
 #deprecated
 pub fn ParamType::to_repr(Self) -> @debug.Repr
 
+#derive(@debug.Debug)
 pub(all) struct ParamTypeEntry {
   name : String
   type_ : ParamType
@@ -255,7 +265,7 @@ pub(all) struct ParamTypeEntry {
   transformer : Transformer
   use_for_snippets : Bool
   prefer_for_regexp_match : Bool
-} derive(@debug.Debug)
+}
 #deprecated
 pub fn ParamTypeEntry::equal(Self, Self) -> Bool
 #deprecated
@@ -292,12 +302,12 @@ pub fn ParamTypeRegistry::new() -> Self
 pub fn ParamTypeRegistry::register(Self, String, ParamType, Array[RegexPattern], transformer? : Transformer, use_for_snippets? : Bool, prefer_for_regexp_match? : Bool) -> Unit raise ParameterTypeError
 
 pub(all) enum ParamValue {
-  IntVal(Int)
+  IntVal(Int32)
   FloatVal(Double)
   DoubleVal(Double)
   LongVal(Int64)
   ByteVal(Byte)
-  ShortVal(Int)
+  ShortVal(Int32)
   StringVal(String)
   WordVal(String)
   AnonymousVal(String)
@@ -318,11 +328,12 @@ pub impl Eq for ParamValue
 pub impl Show for ParamValue
 pub impl @debug.Debug for ParamValue
 
+#derive(Eq, @debug.Debug)
 pub(all) struct ParameterInfo {
   type_ : ParamType
   name : String
-  count : Int
-} derive(Eq, @debug.Debug)
+  count : Int32
+}
 #deprecated
 pub fn ParameterInfo::equal(Self, Self) -> Bool
 #deprecated
@@ -336,9 +347,10 @@ pub struct ParameterType[T] {
 pub fn[T] ParameterType::get(Self[T], Param) -> T raise ParameterTypeError
 pub fn[T] ParameterType::name(Self[T]) -> String
 
+#derive(Eq, @debug.Debug)
 pub(all) struct RegexPattern {
   // private fields
-} derive(Eq, @debug.Debug)
+}
 pub fn RegexPattern::RegexPattern(String) -> Self
 #deprecated
 pub fn RegexPattern::equal(Self, Self) -> Bool
@@ -363,21 +375,23 @@ pub(all) enum StepExpression {
 pub fn StepExpression::match_(Self, String) -> Match? raise
 pub fn StepExpression::source(Self) -> String
 
+#derive(Eq, @debug.Debug, @json.FromJson, @json.ToJson)
 pub(all) struct Token {
   type_ : TokenType
   text : String
-  start : Int
-  end : Int
-} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+  start : Int32
+  end : Int32
+}
 #deprecated
 pub fn Token::equal(Self, Self) -> Bool
-pub fn Token::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Token::from_json(@json.Json, @json.DecodeContext) -> Self raise @json.JsonDecodeError
 #deprecated
 pub fn Token::not_equal(Self, Self) -> Bool
-pub fn Token::to_json(Self) -> Json
+pub fn Token::to_json(Self) -> @json.Json
 #deprecated
 pub fn Token::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.FromJson, @json.ToJson)
 pub(all) enum TokenType {
   StartOfLine
   EndOfLine
@@ -388,13 +402,13 @@ pub(all) enum TokenType {
   EndParameter
   Alternation
   Text
-} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+}
 #deprecated
 pub fn TokenType::equal(Self, Self) -> Bool
-pub fn TokenType::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn TokenType::from_json(@json.Json, @json.DecodeContext) -> Self raise @json.JsonDecodeError
 #deprecated
 pub fn TokenType::not_equal(Self, Self) -> Bool
-pub fn TokenType::to_json(Self) -> Json
+pub fn TokenType::to_json(Self) -> @json.Json
 #deprecated
 pub fn TokenType::to_repr(Self) -> @debug.Repr
 

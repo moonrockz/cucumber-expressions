@@ -141,7 +141,7 @@ test "spec/match: biginteger" {
   assert_eq(
     m.params[0].value,
     ParamValue::BigIntegerVal(
-      BigInt::from_string("123456789012345678901234567890"),
+      @string.parse_bigint("123456789012345678901234567890"),
     ),
   )
   assert_eq(m.params[0].raw, "123456789012345678901234567890")

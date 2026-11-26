@@ -1,7 +1,8 @@
 ///|
+#derive(Debug)
 priv struct Colour {
   name : String
-} derive(Debug)
+}
 
 ///|
 impl ParameterTypeDef for Colour with fn name() {
@@ -19,10 +20,11 @@ impl FromGroups1 for Colour with fn from_groups(name) {
 }
 
 ///|
+#derive(Debug)
 priv struct Point {
   x : Int32
   y : Int32
-} derive(Debug)
+}
 
 ///|
 impl ParameterTypeDef for Point with fn name() {

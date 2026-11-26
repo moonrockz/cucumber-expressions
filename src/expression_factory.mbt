@@ -67,9 +67,7 @@ pub fn ExpressionFactory::create_expression(
     return Regular(regex)
   }
   if length >= 2 && expression.has_prefix("/") && expression.has_suffix("/") {
-    let inner = expression
-      .view(start_offset=1, end_offset=length - 1)
-      .to_owned()
+    let inner = expression[1:length - 1].to_owned()
     return Regular(RegularExpression::new(inner, registry=self.registry))
   }
   Cucumber(Expression::parse_with_registry(expression, self.registry))
@@ -80,5 +78,5 @@ pub fn ExpressionFactory::create_expression(
 /// example `{int}`.
 fn has_parameter(text : String) -> Bool {
   guard text.find("{") is Some(start) else { return false }
-  text.view(start_offset=start).contains("}")
+  text[start:].contains("}")
 }

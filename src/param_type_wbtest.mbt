@@ -397,7 +397,7 @@ test "Registry biginteger transformer produces BigIntegerVal" {
   assert_eq(
     result,
     ParamValue::BigIntegerVal(
-      BigInt::from_string("123456789012345678901234567890"),
+      @string.parse_bigint("123456789012345678901234567890"),
     ),
   )
 }

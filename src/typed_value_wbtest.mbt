@@ -1,7 +1,8 @@
 ///|
+#derive(Debug)
 priv struct Color {
   name : String
-} derive(Debug)
+}
 
 ///|
 /// Register `name` so that each match gives `handle.wrap(Color)`.
